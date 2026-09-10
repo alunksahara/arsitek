@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Globe2, LayoutDashboard, Users } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
 import LocationManager from "@/components/LocationManager";
-import TeamUserManager from "@/components/TeamUserManager";
+import TeamAdminHub from "@/components/TeamAdminHub";
 import type { UserRole } from "@/lib/admin";
 
 type MainTab = "dashboard" | "locations" | "team";
@@ -45,7 +45,7 @@ export default function AdminDashboardShell({ role }: { role: UserRole }) {
       {tab === "dashboard" && isAdmin ? (
         <AdminDashboard />
       ) : tab === "team" && isAdmin ? (
-        <TeamUserManager />
+        <TeamAdminHub />
       ) : (
         <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8">
           <LocationManager embedded />
