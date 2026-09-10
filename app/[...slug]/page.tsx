@@ -3,6 +3,20 @@ import { notFound } from "next/navigation";
 import LocationLanding, { type LocationData } from "@/components/LocationLanding";
 import { createServerSupabase } from "@/lib/supabase-server";
 
+type DbLocation = {
+  city: string;
+  slug: string;
+  province: string;
+  seo_title: string;
+  seo_description: string;
+  h1: string;
+  intro: string;
+  local_context: string;
+  services: string[];
+  process: string[];
+  faqs: { question: string; answer: string }[];
+};
+
 async function getLocation(slug: string): Promise<LocationData | null> {
   const supabase = await createServerSupabase();
   const { data } = await supabase
@@ -13,7 +27,20 @@ async function getLocation(slug: string): Promise<LocationData | null> {
     .maybeSingle();
 
   if (!data) return null;
-  return data as LocationData;
+  const row = data as DbLocation;
+  return {
+    city: row.city,
+    slug: row.slug,
+    province: row.province,
+    seoTitle: row.seo_title,
+    seoDescription: row.seo_description,
+    h1: row.h1,
+    intro: row.intro,
+    localContext: row.local_context,
+    services: row.services || [],
+    process: row.process || [],
+    faqs: row.faqs || [],
+  };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }): Promise<Metadata> {
