@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Pencil, Plus, RefreshCw, Trash2, X } from "lucide-react";
 
 type TeamMember = { id:string; name:string; photo_url:string|null; position:string; bio:string; skills:string[]; sort_order:number; published:boolean };
-type FormState = Omit<TeamMember,"id">;
+type FormState = Omit<TeamMember,"id"|"photo_url"> & { photo_url:string };
 const emptyForm:FormState={name:"",photo_url:"",position:"",bio:"",skills:[],sort_order:0,published:true};
 
 export default function TeamManager(){
