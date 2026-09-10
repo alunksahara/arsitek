@@ -1,9 +1,9 @@
 import { createServerSupabase } from "@/lib/supabase-server";
 import { createAdminSupabase } from "@/lib/supabase-admin";
 
-export async function requireAdmin() {
-  // Client berbasis session:
-  // hanya digunakan untuk mengetahui siapa user yang sedang login.
+export type UserRole = "admin" | "editor";
+
+async function getAuthContext() {
   const authSupabase = await createServerSupabase();
 
   const {
@@ -12,45 +12,74 @@ export async function requireAdmin() {
   } = await authSupabase.auth.getUser();
 
   if (error || !user) {
-    console.log("[ADMIN] No authenticated user");
-
     return {
       authorized: false,
       user: null,
+      role: null as UserRole | null,
       supabase: authSupabase,
     };
   }
 
   const adminEmail =
     process.env.ADMIN_EMAIL?.trim().toLowerCase() || "";
-
   const userEmail =
     user.email?.trim().toLowerCase() || "";
+  const adminSupabase = createAdminSupabase();
 
-  const authorized =
-    Boolean(adminEmail) &&
-    userEmail === adminEmail;
+  if (adminEmail && userEmail === adminEmail) {
+    return {
+      authorized: true,
+      user,
+      role: "admin" as UserRole,
+      supabase: adminSupabase,
+    };
+  }
 
-  console.log("[ADMIN] User:", userEmail);
-  console.log("[ADMIN] ADMIN_EMAIL:", adminEmail);
-  console.log("[ADMIN] Authorized:", authorized);
+  const { data: profile, error: profileError } = await adminSupabase
+    .from("profiles")
+    .select("role,active")
+    .eq("id", user.id)
+    .maybeSingle();
 
-  // Jika bukan admin, jangan berikan privileged client.
-  if (!authorized) {
+  if (
+    profileError ||
+    !profile ||
+    profile.active === false ||
+    (profile.role !== "admin" && profile.role !== "editor")
+  ) {
     return {
       authorized: false,
       user,
+      role: null as UserRole | null,
       supabase: authSupabase,
     };
   }
 
-  // Admin yang sudah terverifikasi menggunakan
-  // Supabase server/admin client untuk operasi database.
-  const adminSupabase = createAdminSupabase();
-
   return {
     authorized: true,
     user,
+    role: profile.role as UserRole,
     supabase: adminSupabase,
   };
+}
+
+export async function requireStaff() {
+  return getAuthContext();
+}
+
+export async function requireAdmin() {
+  const auth = await getAuthContext();
+
+  if (!auth.authorized || auth.role !== "admin") {
+    return {
+      ...auth,
+      authorized: false,
+    };
+  }
+
+  return auth;
+}
+
+export async function requireEditorOrAdmin() {
+  return getAuthContext();
 }
