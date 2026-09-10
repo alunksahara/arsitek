@@ -6,18 +6,19 @@ const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL ||
   "http://localhost:3000";
 
-const siteName = "ATELIER Architecture & Interior";
+const siteName = "RUMAH ARSITEK";
+const siteDescriptor = "Architecture · Interior · Exterior";
 
 const siteDescription =
-  "Studio arsitektur dan interior di Kediri yang merancang rumah, renovasi, dan ruang komersial dengan pendekatan tropis kontemporer, fungsional, dan berkarakter.";
+  "RUMAH ARSITEK adalah studio arsitektur di Kediri yang merancang rumah secara menyeluruh, dari arsitektur dan eksterior hingga interior, dengan desain yang fungsional, berkarakter, dan selaras.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
 
   title: {
     default:
-      "Jasa Arsitek Kediri | ATELIER Architecture & Interior",
-    template: "%s | ATELIER Architecture & Interior",
+      "Jasa Arsitek Kediri | RUMAH ARSITEK",
+    template: "%s | RUMAH ARSITEK",
   },
 
   description: siteDescription,
@@ -27,9 +28,11 @@ export const metadata: Metadata = {
     "arsitek Kediri",
     "desain rumah Kediri",
     "jasa desain rumah Kediri",
-    "arsitektur Kediri",
+    "arsitek rumah Kediri",
+    "desain rumah modern Kediri",
     "renovasi rumah Kediri",
     "interior Kediri",
+    "desain eksterior Kediri",
     "arsitek Jawa Timur",
   ],
 
@@ -56,14 +59,14 @@ export const metadata: Metadata = {
     url: siteUrl,
     siteName,
     title:
-      "Jasa Arsitek Kediri | ATELIER Architecture & Interior",
+      "Jasa Arsitek Kediri | RUMAH ARSITEK",
     description: siteDescription,
   },
 
   twitter: {
     card: "summary_large_image",
     title:
-      "Jasa Arsitek Kediri | ATELIER Architecture & Interior",
+      "Jasa Arsitek Kediri | RUMAH ARSITEK",
     description: siteDescription,
   },
 
@@ -89,6 +92,7 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
     name: siteName,
+    alternateName: siteDescriptor,
     url: siteUrl,
     description: siteDescription,
     areaServed: [
@@ -104,8 +108,9 @@ export default function RootLayout({
     serviceType: [
       "Architecture Design",
       "Residential Architecture",
-      "Renovation",
+      "Exterior Design",
       "Interior Design",
+      "Home Renovation",
     ],
   };
 
