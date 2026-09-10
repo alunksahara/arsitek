@@ -28,17 +28,20 @@ Next.js + Supabase architecture website with protected CRM/admin studio, portfol
 ## GitHub → Vercel
 Create a GitHub repository and push this folder. In Vercel, import that repository. Configure these environment variables in Vercel Production (and Preview if desired):
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `SUPABASE_SECRET_KEY`
 - `NEXT_PUBLIC_SITE_URL`
 - `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`
 - `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
-- `TURNSTILE_SECRET`
+- `TURNSTILE_SECRET_KEY`
 - `TURNSTILE_REQUIRED=true`
 - `TURNSTILE_HOSTNAME`
 - `RATE_LIMIT_SALT`
 - `LEAD_RATE_LIMIT_PER_MINUTE=5`
+- `ADMIN_EMAIL`
+- `NEXT_PUBLIC_WHATSAPP_NUMBER`
 
-Never add `TURNSTILE_SECRET` or a Supabase service-role key to `NEXT_PUBLIC_*` variables.
+Never expose `SUPABASE_SECRET_KEY` or `TURNSTILE_SECRET_KEY` through `NEXT_PUBLIC_*` variables.
 
 ## Custom domain
 After Vercel deploys the project, add the production domain in the Vercel project Domains settings, complete the DNS records Vercel provides, then set `NEXT_PUBLIC_SITE_URL` to the final HTTPS canonical URL and redeploy.
