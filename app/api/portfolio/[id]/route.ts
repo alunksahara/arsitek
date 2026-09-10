@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin, requireStaff } from "@/lib/admin";
+import { createAdminSupabase } from "@/lib/supabase-admin";
 import { jsonError } from "@/lib/security";
 
 type Context = { params: Promise<{ id: string }> };
@@ -13,7 +14,12 @@ function cleanString(value: unknown, max = 500) {
 
 function cleanSlug(value: unknown) {
   if (typeof value !== "string") return null;
-  const slug = value.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 160);
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 160);
   return slug || null;
 }
 
@@ -22,7 +28,7 @@ function validUuid(value: string) {
 }
 
 export async function PATCH(request: Request, context: Context) {
-  const { authorized, supabase, user } = await requireStaff();
+  const { authorized, supabase, user, role } = await requireStaff();
   if (!authorized || !user) return jsonError("Unauthorized", 401);
 
   const { id } = await context.params;
@@ -30,6 +36,11 @@ export async function PATCH(request: Request, context: Context) {
 
   try {
     const body = await request.json();
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return jsonError("Format request tidak valid.", 400);
+    }
+
     const patch: Record<string, unknown> = {};
 
     if ("title" in body) {
@@ -37,27 +48,34 @@ export async function PATCH(request: Request, context: Context) {
       if (!title) return jsonError("Judul tidak boleh kosong.", 400);
       patch.title = title;
     }
+
     if ("slug" in body) {
       const slug = cleanSlug(body.slug);
       if (!slug) return jsonError("Slug tidak boleh kosong.", 400);
       patch.slug = slug;
     }
+
     if ("location" in body) patch.location = cleanString(body.location, 200);
     if ("category" in body) patch.category = cleanString(body.category, 120);
+
     if ("image_url" in body) {
       const imageUrl = cleanString(body.image_url, 1000);
       if (!imageUrl) return jsonError("Image URL tidak boleh kosong.", 400);
       patch.image_url = imageUrl;
     }
+
     if ("description" in body) patch.description = cleanString(body.description, 5000);
+
     if ("featured" in body) {
       if (typeof body.featured !== "boolean") return jsonError("Featured harus boolean.", 400);
       patch.featured = body.featured;
     }
+
     if ("published" in body) {
       if (typeof body.published !== "boolean") return jsonError("Published harus boolean.", 400);
       patch.published = body.published;
     }
+
     if ("sort_order" in body) {
       const sortOrder = Number(body.sort_order);
       if (!Number.isFinite(sortOrder)) return jsonError("Sort order tidak valid.", 400);
@@ -65,6 +83,7 @@ export async function PATCH(request: Request, context: Context) {
     }
 
     if (!Object.keys(patch).length) return jsonError("Tidak ada perubahan.", 400);
+
     patch.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase
@@ -80,12 +99,9 @@ export async function PATCH(request: Request, context: Context) {
       return jsonError("Gagal memperbarui portfolio.", 400);
     }
 
-    await supabase.from("audit_logs").insert({
-      actor_id: user.id,
-      action: "portfolio.update",
-      entity_type: "portfolio",
-      entity_id: id,
-      details: { changed: Object.keys(patch), role: "editor_or_admin" },
+    await writeAudit(user.id, "portfolio.update", id, {
+      changed: Object.keys(patch),
+      role,
     });
 
     return NextResponse.json({ project: data });
@@ -111,23 +127,45 @@ export async function DELETE(_request: Request, context: Context) {
 
     if (findError || !existing) return jsonError("Portfolio tidak ditemukan.", 404);
 
-    const { error } = await supabase.from("portfolio_projects").delete().eq("id", id);
+    const { error } = await supabase
+      .from("portfolio_projects")
+      .delete()
+      .eq("id", id);
+
     if (error) {
       console.error("[PORTFOLIO DELETE]", error);
       return jsonError("Gagal menghapus portfolio.", 400);
     }
 
-    await supabase.from("audit_logs").insert({
-      actor_id: user.id,
-      action: "portfolio.delete",
-      entity_type: "portfolio",
-      entity_id: id,
-      details: { title: existing.title, slug: existing.slug },
+    await writeAudit(user.id, "portfolio.delete", id, {
+      title: existing.title,
+      slug: existing.slug,
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[PORTFOLIO DELETE FATAL]", error);
     return jsonError("Terjadi kesalahan server.", 500);
+  }
+}
+
+async function writeAudit(
+  actorId: string,
+  action: string,
+  entityId: string,
+  details: unknown
+) {
+  const auditSupabase = createAdminSupabase();
+
+  const { error } = await auditSupabase.from("audit_logs").insert({
+    actor_id: actorId,
+    action,
+    entity_type: "portfolio",
+    entity_id: entityId,
+    details,
+  });
+
+  if (error) {
+    console.error("[PORTFOLIO AUDIT]", error);
   }
 }
