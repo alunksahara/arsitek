@@ -1,0 +1,1 @@
+import{redirect}from"next/navigation";import AdminDashboard from"@/components/AdminDashboard";import{requireAdmin}from"@/lib/admin";export default async function AdminPage(){const{authorized}=await requireAdmin();if(!authorized)redirect("/admin/login");return <AdminDashboard/>}
