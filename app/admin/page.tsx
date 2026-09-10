@@ -1,13 +1,13 @@
 import { redirect } from "next/navigation";
 import AdminDashboardShell from "@/components/AdminDashboardShell";
-import { requireAdmin } from "@/lib/admin";
+import { requireStaff } from "@/lib/admin";
 
 export default async function AdminPage() {
-  const { authorized } = await requireAdmin();
+  const { authorized, role } = await requireStaff();
 
-  if (!authorized) {
+  if (!authorized || !role) {
     redirect("/admin/login");
   }
 
-  return <AdminDashboardShell />;
+  return <AdminDashboardShell role={role} />;
 }
