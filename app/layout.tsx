@@ -2,74 +2,58 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  "http://localhost:3000";
-
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const siteName = "RUMAH ARSITEK";
 const siteDescriptor = "Architecture · Interior · Exterior";
-
 const siteDescription =
-  "RUMAH ARSITEK adalah studio arsitektur di Kediri yang merancang rumah secara menyeluruh, dari arsitektur dan eksterior hingga interior, dengan desain yang fungsional, berkarakter, dan selaras.";
+  "RUMAH ARSITEK membantu Anda memulai kebutuhan desain rumah, renovasi, interior, hingga ruang usaha, lalu menemukan jalan menuju partner profesional yang sesuai.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-
   title: {
-    default:
-      "Jasa Arsitek Kediri | RUMAH ARSITEK",
+    default: "RUMAH ARSITEK | Partner Mewujudkan Ruang",
     template: "%s | RUMAH ARSITEK",
   },
-
   description: siteDescription,
-
   keywords: [
+    "RUMAH ARSITEK",
     "jasa arsitek Kediri",
     "arsitek Kediri",
     "desain rumah Kediri",
     "jasa desain rumah Kediri",
-    "arsitek rumah Kediri",
-    "desain rumah modern Kediri",
     "renovasi rumah Kediri",
-    "interior Kediri",
+    "desain interior Kediri",
     "desain eksterior Kediri",
     "arsitek Jawa Timur",
+    "desain rumah modern",
   ],
-
   applicationName: siteName,
   authors: [{ name: siteName }],
   creator: siteName,
   publisher: siteName,
-
-  alternates: {
-    canonical: siteUrl,
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: ["/icon.svg"],
+    apple: [{ url: "/icon.svg" }],
   },
-
-  verification:
-    process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-      ? {
-          google:
-            process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
-        }
-      : undefined,
-
+  manifest: "/manifest.webmanifest",
+  alternates: { canonical: siteUrl },
+  verification: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }
+    : undefined,
   openGraph: {
     type: "website",
     locale: "id_ID",
     url: siteUrl,
     siteName,
-    title:
-      "Jasa Arsitek Kediri | RUMAH ARSITEK",
+    title: "RUMAH ARSITEK | Partner Mewujudkan Ruang",
     description: siteDescription,
   },
-
   twitter: {
     card: "summary_large_image",
-    title:
-      "Jasa Arsitek Kediri | RUMAH ARSITEK",
+    title: "RUMAH ARSITEK | Partner Mewujudkan Ruang",
     description: siteDescription,
   },
-
   robots: {
     index: true,
     follow: true,
@@ -83,11 +67,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "ProfessionalService",
@@ -96,14 +76,9 @@ export default function RootLayout({
     url: siteUrl,
     description: siteDescription,
     areaServed: [
-      {
-        "@type": "City",
-        name: "Kediri",
-      },
-      {
-        "@type": "State",
-        name: "Jawa Timur",
-      },
+      { "@type": "City", name: "Kediri" },
+      { "@type": "State", name: "Jawa Timur" },
+      { "@type": "Country", name: "Indonesia" },
     ],
     serviceType: [
       "Architecture Design",
@@ -111,19 +86,20 @@ export default function RootLayout({
       "Exterior Design",
       "Interior Design",
       "Home Renovation",
+      "Commercial Space Design",
     ],
   };
 
   return (
     <html lang="id">
       <body>
+        <a className="skip-link" href="#main-content">
+          Lewati ke konten utama
+        </a>
         {children}
-
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd),
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </body>
     </html>
