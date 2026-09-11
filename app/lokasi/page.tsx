@@ -1,20 +1,26 @@
 import Link from "next/link";
+import { createAdminSupabase } from "@/lib/supabase-admin";
 
-const locations = [
-  { slug: "kediri", name: "Kediri", region: "Jawa Timur", description: "Titik awal RUMAH ARSITEK untuk kebutuhan desain rumah, renovasi, interior, dan ruang usaha." },
-  { slug: "jombang", name: "Jombang", region: "Jawa Timur", description: "Informasi dan jalur konsultasi kebutuhan ruang untuk rumah, renovasi, interior, dan usaha di Jombang." },
-  { slug: "malang", name: "Malang", region: "Jawa Timur", description: "Jelajahi kebutuhan desain dan pengembangan ruang untuk hunian maupun properti usaha di Malang." },
-  { slug: "surabaya", name: "Surabaya", region: "Jawa Timur", description: "Ruang tinggal dan ruang usaha di Surabaya membutuhkan pendekatan yang sesuai konteks dan kebutuhan pengguna." },
-  { slug: "mojokerto", name: "Mojokerto", region: "Jawa Timur", description: "Mulai dari cerita kebutuhan ruang hingga menemukan jalur profesional yang sesuai di Mojokerto." },
-];
+export const revalidate = 60;
 
 export const metadata = {
-  title: "Lokasi Layanan Desain & Arsitektur",
-  description: "Jelajahi halaman lokasi RUMAH ARSITEK untuk kebutuhan rumah, renovasi, interior, dan ruang usaha di berbagai kota.",
+  title: "Lokasi Layanan Desain & Arsitektur | RUMAH ARSITEK",
+  description:
+    "Jelajahi lokasi aktif RUMAH ARSITEK untuk kebutuhan desain rumah, renovasi, interior, dan ruang usaha di berbagai kota.",
   alternates: { canonical: "/lokasi" },
 };
 
-export default function LokasiPage() {
+export default async function LokasiPage() {
+  const supabase = createAdminSupabase();
+  const { data: locations } = await supabase
+    .from("locations")
+    .select("city,slug,province,seo_description,h1,intro,sort_order")
+    .eq("published", true)
+    .order("sort_order", { ascending: true })
+    .order("city", { ascending: true });
+
+  const activeLocations = locations || [];
+
   return (
     <main className="min-h-screen bg-[#fbfaf6] text-[#25342b]">
       <header className="sticky top-0 z-40 border-b border-[#e6e9e3] bg-[#fbfaf6]/95 backdrop-blur-xl">
@@ -36,7 +42,7 @@ export default function LokasiPage() {
         <div className="mx-auto w-[min(1180px,calc(100%-32px))] py-20 sm:py-28">
           <p className="mb-4 text-xs font-black uppercase tracking-[.16em] text-[#2f6b4a]">Lokasi RUMAH ARSITEK</p>
           <h1 className="max-w-4xl font-serif text-5xl font-normal leading-[1.02] tracking-[-.045em] sm:text-7xl">Mulai dari kota Anda. <span className="text-[#2f6b4a]">Ruangnya tetap personal.</span></h1>
-          <p className="mt-7 max-w-2xl text-base leading-8 text-[#3f4c44] sm:text-lg">RUMAH ARSITEK tidak dibangun untuk berhenti di satu kota. Halaman lokasi membantu Anda menemukan konteks layanan berdasarkan wilayah, sementara kebutuhan proyek tetap menjadi titik awal percakapan.</p>
+          <p className="mt-7 max-w-2xl text-base leading-8 text-[#3f4c44] sm:text-lg">RUMAH ARSITEK tidak dibangun untuk berhenti di satu kota. Halaman lokasi mengikuti lokasi yang aktif di dashboard, sementara kebutuhan proyek tetap menjadi titik awal percakapan.</p>
         </div>
       </section>
 
@@ -45,16 +51,23 @@ export default function LokasiPage() {
           <p className="text-xs font-black uppercase tracking-[.16em] text-[#2f6b4a]">Pilih wilayah</p>
           <h2 className="mt-3 font-serif text-4xl font-normal tracking-[-.035em] sm:text-5xl">Kebutuhan ruang, dimulai dari tempat Anda berada.</h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {locations.map((location) => (
-            <Link key={location.slug} href={`/lokasi/${location.slug}`} className="group rounded-3xl border border-[#d8e0d9] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-[#9bb5a2] hover:shadow-xl">
-              <p className="text-xs font-black uppercase tracking-[.14em] text-[#6a766f]">{location.region}</p>
-              <h3 className="mt-14 font-serif text-3xl font-normal text-[#25342b]">RUMAH ARSITEK {location.name}</h3>
-              <p className="mt-3 text-sm leading-6 text-[#3f4c44]">{location.description}</p>
-              <span className="mt-7 inline-flex text-sm font-black text-[#2f6b4a]">Jelajahi {location.name} →</span>
-            </Link>
-          ))}
-        </div>
+
+        {activeLocations.length === 0 ? (
+          <div className="rounded-3xl border border-[#d8e0d9] bg-white p-8 text-[#3f4c44] shadow-sm">
+            Belum ada lokasi yang dipublikasikan. Silakan mulai dari konsultasi dan ceritakan kebutuhan ruang Anda.
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {activeLocations.map((location) => (
+              <Link key={location.slug} href={`/lokasi/${location.slug}`} className="group rounded-3xl border border-[#d8e0d9] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-[#9bb5a2] hover:shadow-xl">
+                <p className="text-xs font-black uppercase tracking-[.14em] text-[#6a766f]">{location.province}</p>
+                <h3 className="mt-14 font-serif text-3xl font-normal text-[#25342b]">{location.h1 || `RUMAH ARSITEK ${location.city}`}</h3>
+                <p className="mt-3 text-sm leading-6 text-[#3f4c44]">{location.seo_description || location.intro}</p>
+                <span className="mt-7 inline-flex text-sm font-black text-[#2f6b4a]">Jelajahi {location.city} →</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="border-y border-[#dce5dd] bg-[#f3eee5]">
