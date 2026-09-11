@@ -4,627 +4,191 @@ import { useMemo, useState } from "react";
 import ArchitectureEstimator from "@/components/ArchitectureEstimator";
 import TeamSection from "@/components/TeamSection";
 
-const services = [
-  {
-    number: "01",
-    title: "Bangun Rumah",
-    description:
-      "Mulai dari kebutuhan, konsep, hingga menemukan tenaga profesional yang sesuai untuk rencana rumah Anda.",
-    items: ["Kebutuhan & brief", "Konsep desain", "Pengembangan desain"],
-  },
-  {
-    number: "02",
-    title: "Renovasi",
-    description:
-      "Ubah rumah yang ada menjadi ruang yang lebih nyaman, fungsional, dan sesuai kebutuhan baru.",
-    items: ["Evaluasi kebutuhan", "Konsep renovasi", "Pengembangan desain"],
-  },
-  {
-    number: "03",
-    title: "Interior",
-    description:
-      "Tata ruang, material, warna, dan furniture agar interior terasa nyaman serta memiliki karakter.",
-    items: ["Layout ruang", "Material & warna", "Furniture planning"],
-  },
-  {
-    number: "04",
-    title: "Bisnis & Properti",
-    description:
-      "Untuk café, kantor, toko, villa, kos, guest house, dan kebutuhan ruang komersial lainnya.",
-    items: ["Kebutuhan proyek", "Konsep ruang", "Partner profesional"],
-  },
+const categories = [
+  { number: "01", title: "Rumah Baru", text: "Mulai dari lahan kosong sampai konsep rumah yang terasa benar-benar milik Anda." },
+  { number: "02", title: "Renovasi", text: "Ubah ruang yang ada agar lebih nyaman, rapi, fungsional, dan relevan dengan kebutuhan baru." },
+  { number: "03", title: "Interior", text: "Susun suasana, layout, material, warna, dan furniture agar ruang terasa lebih hidup." },
+  { number: "04", title: "Bisnis & Properti", text: "Café, kantor, toko, villa, kos, guest house, dan ruang usaha lainnya." },
 ];
 
 const projects = [
   {
-    number: "01",
-    title: "Tropical Courtyard House",
-    location: "Kediri, Jawa Timur",
+    title: "Tropical Courtyard",
     type: "Residential",
-    description:
-      "Contoh pendekatan rumah tropis kontemporer dengan cahaya alami, udara terbuka, dan ruang keluarga yang hangat.",
-    imageClass: "project-one",
+    location: "Kediri · Jawa Timur",
+    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=85",
   },
   {
-    number: "02",
-    title: "Modern Family House",
+    title: "Quiet Modern House",
+    type: "Residential",
     location: "Jawa Timur",
-    type: "Residential",
-    description:
-      "Contoh hunian modern dengan komposisi sederhana, bukaan besar, dan penggunaan ruang yang efisien.",
-    imageClass: "project-two",
+    image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=85",
   },
   {
-    number: "03",
-    title: "Compact Urban Residence",
-    location: "Kediri, Jawa Timur",
-    type: "Residential",
-    description:
-      "Contoh rumah kota dengan pendekatan compact living, privasi yang baik, dan hubungan dengan taman.",
-    imageClass: "project-three",
+    title: "Warm Minimal Interior",
+    type: "Interior",
+    location: "Indonesia",
+    image: "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1400&q=85",
   },
 ];
 
-const processSteps = [
-  {
-    number: "01",
-    title: "Ceritakan kebutuhan",
-    description:
-      "Ceritakan rencana, lokasi, luas lahan, kondisi bangunan, atau gambaran ruang yang Anda inginkan.",
-  },
-  {
-    number: "02",
-    title: "Konsultasi awal",
-    description:
-      "Kami membantu memahami kebutuhan proyek dan menentukan langkah yang paling masuk akal untuk dilanjutkan.",
-  },
-  {
-    number: "03",
-    title: "Tentukan solusi",
-    description:
-      "Kebutuhan proyek diarahkan ke layanan dan tenaga profesional yang paling sesuai dengan lingkup pekerjaan.",
-  },
-  {
-    number: "04",
-    title: "Proyek berjalan",
-    description:
-      "Partner profesional menangani pekerjaan teknis sesuai ruang lingkup proyek yang telah disepakati.",
-  },
+const steps = [
+  ["01", "Ceritakan rencana", "Kirim kebutuhan sederhana: jenis proyek, lokasi, luas, kondisi, dan gambaran yang Anda inginkan."],
+  ["02", "Konsultasi awal", "Kita rapikan kebutuhan dan menentukan arah yang paling masuk akal untuk proyek Anda."],
+  ["03", "Temukan solusi", "Kebutuhan diteruskan kepada partner profesional yang sesuai dengan lingkup proyek."],
+  ["04", "Proyek berjalan", "Pekerjaan teknis ditangani profesional sesuai ruang lingkup dan kesepakatan proyek."],
 ];
 
-const values = [
-  {
-    title: "Mudah dimulai",
-    text: "Anda tidak perlu memahami istilah arsitektur untuk mulai berkonsultasi.",
-  },
-  {
-    title: "Sesuai kebutuhan",
-    text: "Setiap proyek memiliki kondisi, tujuan, budget, dan kebutuhan yang berbeda.",
-  },
-  {
-    title: "Partner profesional",
-    text: "Kebutuhan teknis dapat diarahkan kepada tenaga profesional yang sesuai dengan proyek.",
-  },
-];
-
-function Arrow() {
+function Arrow({ dark = false }: { dark?: boolean }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M5 12h13M13 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <span className={dark ? "text-white" : "text-current"} aria-hidden="true">↗</span>
   );
 }
 
 function MenuIcon() {
-  return (
-    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="M4 7h16M4 12h16M4 17h16"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path
-        d="m5 12 4 4L19 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
+  return <span className="text-2xl leading-none">☰</span>;
 }
 
 export default function HomePage() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6281234567890";
-  const whatsappMessage = encodeURIComponent(
-    "Halo RUMAH ARSITEK, saya ingin berkonsultasi mengenai rencana proyek saya."
-  );
-  const whatsappUrl = useMemo(
-    () => `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`,
-    [whatsappNumber, whatsappMessage]
-  );
+  const whatsappMessage = encodeURIComponent("Halo RUMAH ARSITEK, saya ingin berkonsultasi mengenai rencana proyek saya.");
+  const whatsappUrl = useMemo(() => `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`, [whatsappNumber, whatsappMessage]);
 
   return (
-    <main className="min-h-screen bg-white">
-      <header className="site-header">
-        <div className="container-main header-inner">
-          <a href="/" className="brand" aria-label="RUMAH ARSITEK">
-            <span className="brand-mark">R</span>
-            <span className="brand-copy">
-              <strong>RUMAH ARSITEK</strong>
-              <small>Design · Planning · Professional Network</small>
+    <main className="min-h-screen bg-[#f5f2eb] text-[#1d211d]">
+      <header className="sticky top-0 z-50 border-b border-black/10 bg-[#f5f2eb]/95 backdrop-blur-md">
+        <div className="mx-auto flex min-h-[76px] w-[min(1240px,calc(100%-32px))] items-center justify-between gap-6">
+          <a href="/" className="group flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-full bg-[#173d29] text-lg font-serif text-white">R</span>
+            <span>
+              <strong className="block text-[13px] tracking-[.16em]">RUMAH ARSITEK</strong>
+              <small className="hidden text-[9px] uppercase tracking-[.18em] text-black/45 sm:block">Space · Planning · Professional Network</small>
             </span>
           </a>
 
-          <nav className="desktop-nav" aria-label="Main navigation">
-            <a href="#needs">Kebutuhan</a>
-            <a href="#services">Layanan</a>
-            <a href="#projects">Inspirasi</a>
-            <a href="#process">Cara Kerja</a>
-            <a href="#estimator">Estimasi</a>
+          <nav className="hidden items-center gap-7 lg:flex">
+            <a href="#kebutuhan" className="text-xs font-semibold hover:text-[#24563b]">Kebutuhan</a>
+            <a href="#inspirasi" className="text-xs font-semibold hover:text-[#24563b]">Inspirasi</a>
+            <a href="#cara-kerja" className="text-xs font-semibold hover:text-[#24563b]">Cara Kerja</a>
+            <a href="#estimasi" className="text-xs font-semibold hover:text-[#24563b]">Estimasi</a>
           </nav>
 
-          <a href="/contact" className="header-cta">
-            Konsultasi <Arrow />
-          </a>
+          <div className="hidden items-center gap-3 sm:flex">
+            <a href={whatsappUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#173d29]">WhatsApp</a>
+            <a href="/contact" className="rounded-full bg-[#173d29] px-5 py-3 text-xs font-bold text-white transition hover:bg-[#24563b]">Mulai Konsultasi <Arrow dark /></a>
+          </div>
 
-          <button
-            type="button"
-            className="mobile-menu-button"
-            onClick={() => setMobileMenu((value) => !value)}
-            aria-label="Buka menu"
-            aria-expanded={mobileMenu}
-          >
-            <MenuIcon />
-          </button>
+          <button type="button" className="rounded-full border border-black/10 p-2 lg:hidden" onClick={() => setMobileMenu((v) => !v)} aria-label="Buka menu" aria-expanded={mobileMenu}><MenuIcon /></button>
         </div>
-
         {mobileMenu && (
-          <div className="mobile-menu">
-            <a href="#needs" onClick={() => setMobileMenu(false)}>
-              Kebutuhan
-            </a>
-            <a href="#services" onClick={() => setMobileMenu(false)}>
-              Layanan
-            </a>
-            <a href="#projects" onClick={() => setMobileMenu(false)}>
-              Inspirasi
-            </a>
-            <a href="#process" onClick={() => setMobileMenu(false)}>
-              Cara Kerja
-            </a>
-            <a href="#estimator" onClick={() => setMobileMenu(false)}>
-              Estimasi
-            </a>
-            <a href="/contact" onClick={() => setMobileMenu(false)}>
-              Konsultasi
-            </a>
+          <div className="border-t border-black/10 bg-[#f5f2eb] px-4 py-5 lg:hidden">
+            {[["#kebutuhan", "Kebutuhan"], ["#inspirasi", "Inspirasi"], ["#cara-kerja", "Cara Kerja"], ["#estimasi", "Estimasi"], ["/contact", "Konsultasi"]].map(([href, label]) => (
+              <a key={label} href={href} onClick={() => setMobileMenu(false)} className="block border-b border-black/10 py-4 text-base font-semibold">{label}</a>
+            ))}
           </div>
         )}
       </header>
 
-      <section className="hero-section">
-        <div className="container-main hero-grid">
-          <div className="hero-copy fade-up">
-            <div className="eyebrow">
-              <span className="dot-accent" />
-              Solusi desain · renovasi · ruang
+      <section className="relative overflow-hidden bg-[#173d29] text-white">
+        <div className="mx-auto grid min-h-[720px] w-[min(1240px,calc(100%-32px))] items-end gap-10 py-12 lg:grid-cols-[1.02fr_.98fr] lg:py-16">
+          <div className="relative z-10 pb-4 lg:pb-12">
+            <p className="mb-7 text-[10px] font-bold uppercase tracking-[.28em] text-[#c9d8c9]">RUMAH ARSITEK · KEDIRI / INDONESIA</p>
+            <h1 className="max-w-[820px] font-serif text-[clamp(52px,7.2vw,104px)] font-normal leading-[.9] tracking-[-.065em]">Ruang yang terasa <i className="text-[#d9b98c]">seperti Anda.</i></h1>
+            <p className="mt-8 max-w-[600px] text-[15px] leading-7 text-white/70 sm:text-[17px]">Mulai dari kebutuhan Anda. Kami membantu menyederhanakan langkah menuju desain, renovasi, interior, dan solusi ruang bersama partner profesional yang sesuai.</p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[#d9b98c] px-6 py-4 text-sm font-extrabold text-[#173d29] transition hover:-translate-y-1">Konsultasi via WhatsApp <Arrow /></a>
+              <a href="#estimasi" className="rounded-full border border-white/30 px-6 py-4 text-sm font-bold text-white transition hover:bg-white/10">Cek estimasi awal</a>
             </div>
-
-            <h1 className="hero-title">
-              Wujudkan ruang yang <em>sesuai</em> dengan hidup dan rencana Anda.
-            </h1>
-
-            <p className="hero-description">
-              RUMAH ARSITEK membantu Anda memulai dari kebutuhan, memahami pilihan,
-              dan menemukan solusi profesional untuk rumah, renovasi, interior,
-              hingga ruang komersial.
-            </p>
-
-            <div className="hero-actions">
-              <a href="/contact" className="btn-primary">
-                Mulai Konsultasi <Arrow />
-              </a>
-              <a href="#estimator" className="btn-secondary">
-                Cek Estimasi
-              </a>
-            </div>
-
-            <div className="hero-meta">
-              <div>
-                <strong>Mulai dari kebutuhan</strong>
-                <span>Tanpa harus paham istilah teknis</span>
-              </div>
-              <div>
-                <strong>Partner profesional</strong>
-                <span>Sesuai kebutuhan proyek</span>
-              </div>
+            <div className="mt-14 flex flex-wrap gap-8 border-t border-white/15 pt-6 text-[10px] uppercase tracking-[.13em] text-white/55">
+              <span>Rumah baru</span><span>Renovasi</span><span>Interior</span><span>Komersial</span>
             </div>
           </div>
 
-          <div className="hero-visual fade-up">
-            <div className="hero-photo-placeholder">
-              <div className="hero-house">
-                <div className="house-roof" />
-                <div className="house-body">
-                  <div className="house-window window-one" />
-                  <div className="house-window window-two" />
-                  <div className="house-door" />
-                </div>
-              </div>
-              <div className="hero-tree tree-one" />
-              <div className="hero-tree tree-two" />
-              <div className="hero-label hero-label-top">
-                SPACE · HOME · LIFE
-              </div>
-              <div className="hero-label hero-label-bottom">
-                START WITH YOUR NEEDS
-              </div>
+          <div className="relative h-[420px] overflow-hidden rounded-[28px] bg-[#d8d1c5] lg:h-[600px]">
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${projects[0].image})` }} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
+            <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white">
+              <div><p className="text-[9px] uppercase tracking-[.22em] text-white/65">Visual direction</p><p className="mt-2 font-serif text-2xl">Tropical Courtyard</p></div>
+              <span className="rounded-full border border-white/30 px-3 py-2 text-[9px] uppercase tracking-[.16em]">01 / 03</span>
             </div>
           </div>
         </div>
+        <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full border border-white/10" />
       </section>
 
-      <section className="trust-strip-section" aria-label="Keunggulan layanan">
-        <div className="container-main trust-strip">
-          <div>
-            <strong>Rumah baru</strong>
-            <span>Bangun dari awal</span>
+      <section id="kebutuhan" className="bg-[#f5f2eb] py-20 sm:py-28">
+        <div className="mx-auto w-[min(1240px,calc(100%-32px))]">
+          <div className="grid gap-8 lg:grid-cols-[.72fr_1.28fr] lg:items-end">
+            <div><p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#24563b]">01 · Mulai di sini</p><h2 className="mt-4 max-w-xl font-serif text-5xl font-normal leading-[.95] tracking-[-.05em] sm:text-6xl">Apa yang sedang Anda rencanakan?</h2></div>
+            <p className="max-w-lg text-sm leading-7 text-black/55 lg:justify-self-end">Anda tidak harus tahu nama layanan yang tepat. Pilih situasinya, ceritakan kebutuhan Anda, lalu kita tentukan langkah berikutnya.</p>
           </div>
-          <div>
-            <strong>Renovasi</strong>
-            <span>Perbarui ruang yang ada</span>
-          </div>
-          <div>
-            <strong>Interior</strong>
-            <span>Atur ruang lebih nyaman</span>
-          </div>
-          <div>
-            <strong>Komersial</strong>
-            <span>Ruang untuk bisnis & properti</span>
-          </div>
-        </div>
-      </section>
-
-      <section id="needs" className="section needs-section">
-        <div className="container-main">
-          <div className="section-heading-row">
-            <div>
-              <p className="label">01 / Mulai dari kebutuhan</p>
-              <h2 className="section-title">Anda sedang merencanakan apa?</h2>
-            </div>
-            <p className="section-heading-description">
-              Tidak perlu tahu harus memakai jasa apa. Pilih kebutuhan Anda dan
-              mulai dari percakapan yang sederhana.
-            </p>
-          </div>
-
-          <div className="needs-grid">
-            {services.map((service) => (
-              <a key={service.number} href="#services" className="need-card">
-                <span>{service.number}</span>
-                <h3>{service.title}</h3>
-                <p>{service.description}</p>
-                <span className="need-arrow">
-                  Mulai dari sini <Arrow />
-                </span>
+          <div className="mt-12 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {categories.map((item) => (
+              <a key={item.number} href="/contact" className="group min-h-[290px] rounded-[22px] border border-black/10 bg-[#ebe7de] p-7 transition duration-300 hover:-translate-y-2 hover:bg-[#173d29] hover:text-white">
+                <div className="flex items-start justify-between"><span className="text-[10px] font-bold tracking-[.2em] opacity-45">{item.number}</span><span className="text-2xl transition group-hover:translate-x-1">↗</span></div>
+                <div className="mt-20"><h3 className="font-serif text-3xl leading-none tracking-[-.04em]">{item.title}</h3><p className="mt-4 text-xs leading-6 opacity-60">{item.text}</p></div>
               </a>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="services" className="section section-cream">
-        <div className="container-main">
-          <div className="section-heading-row">
-            <div>
-              <p className="label">02 / Layanan</p>
-              <h2 className="section-title">Solusi yang bisa berkembang bersama kebutuhan Anda.</h2>
+      <section id="inspirasi" className="bg-[#e6e0d5] py-20 sm:py-28">
+        <div className="mx-auto w-[min(1240px,calc(100%-32px))]">
+          <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-end"><div><p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#24563b]">02 · Inspirasi</p><h2 className="mt-4 font-serif text-5xl font-normal leading-none tracking-[-.05em] sm:text-7xl">Lihat kemungkinan.</h2></div><p className="max-w-sm text-sm leading-6 text-black/55">Contoh visual adalah titik awal. Solusi akhir selalu menyesuaikan kebutuhan dan kondisi proyek nyata.</p></div>
+          <div className="mt-12 grid gap-5 lg:grid-cols-[1.18fr_.82fr]">
+            <article className="group relative min-h-[580px] overflow-hidden rounded-[28px] bg-black text-white"><div className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${projects[0].image})` }} /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" /><div className="absolute bottom-7 left-7 right-7"><p className="text-[9px] uppercase tracking-[.22em] text-white/55">{projects[0].type}</p><h3 className="mt-2 font-serif text-4xl">{projects[0].title}</h3><p className="mt-2 text-xs text-white/65">{projects[0].location}</p></div></article>
+            <div className="grid gap-5">
+              {projects.slice(1).map((project) => <article key={project.title} className="group relative min-h-[278px] overflow-hidden rounded-[28px] bg-black text-white"><div className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105" style={{ backgroundImage: `url(${project.image})` }} /><div className="absolute inset-0 bg-gradient-to-t from-black/75 via-transparent to-transparent" /><div className="absolute bottom-6 left-6"><p className="text-[9px] uppercase tracking-[.2em] text-white/55">{project.type}</p><h3 className="mt-1 font-serif text-2xl">{project.title}</h3></div></article>)}
             </div>
-            <p className="section-heading-description">
-              Dari kebutuhan rumah tinggal hingga properti komersial, ruang lingkup
-              dapat disesuaikan dengan proyek yang sedang Anda rencanakan.
-            </p>
-          </div>
-
-          <div className="services-grid services-grid-four">
-            {services.map((service) => (
-              <article key={service.number} className="service-card">
-                <div className="service-number">{service.number}</div>
-                <h3>{service.title}</h3>
-                <p>{service.description}</p>
-                <ul>
-                  {service.items.map((item) => (
-                    <li key={item}>
-                      <span>
-                        <CheckIcon />
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <a href="/contact" className="service-link">
-                  Diskusikan kebutuhan <Arrow />
-                </a>
-              </article>
-            ))}
           </div>
         </div>
       </section>
 
-      <section className="problem-section">
-        <div className="container-main problem-grid">
-          <div>
-            <p className="label">03 / Tidak tahu harus mulai dari mana?</p>
-            <h2 className="section-title">
-              Anda tidak harus sudah punya desain untuk mulai berkonsultasi.
-            </h2>
-          </div>
-          <div className="problem-copy">
-            <p>
-              Punya tanah tetapi belum punya gambaran rumah? Ingin renovasi tetapi
-              bingung menentukan kebutuhan? Sudah punya ide tetapi belum tahu siapa
-              yang tepat untuk mengerjakannya?
-            </p>
-            <p>
-              Ceritakan kondisi Anda terlebih dahulu. RUMAH ARSITEK membantu
-              menyederhanakan langkah awal sebelum kebutuhan diteruskan kepada
-              tenaga profesional yang sesuai.
-            </p>
-            <a href="/contact" className="text-link">
-              Ceritakan rencana Anda <Arrow />
-            </a>
+      <section className="bg-white py-20 sm:py-28">
+        <div className="mx-auto grid w-[min(1240px,calc(100%-32px))] gap-12 lg:grid-cols-[.75fr_1.25fr]">
+          <div><p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#24563b]">03 · Cara kami membantu</p><h2 className="mt-4 font-serif text-5xl font-normal leading-[.95] tracking-[-.05em] sm:text-6xl">Anda bawa ceritanya. Kami bantu merapikan jalannya.</h2></div>
+          <div className="divide-y divide-black/10 border-y border-black/10">
+            {steps.map(([number, title, text]) => <div key={number} className="grid gap-4 py-7 sm:grid-cols-[70px_190px_1fr]"><span className="text-[10px] font-bold tracking-[.2em] text-[#24563b]">{number}</span><h3 className="font-serif text-2xl">{title}</h3><p className="text-sm leading-6 text-black/55">{text}</p></div>)}
           </div>
         </div>
       </section>
 
-      <section id="projects" className="section projects-section">
-        <div className="container-main">
-          <div className="section-heading-row">
-            <div>
-              <p className="label">04 / Inspirasi</p>
-              <h2 className="section-title">Contoh ruang yang bisa menjadi titik awal.</h2>
-            </div>
-            <p className="section-heading-description">
-              Gunakan contoh proyek sebagai inspirasi. Setiap proyek tetap perlu
-              disesuaikan dengan lahan, kebutuhan, gaya hidup, dan kondisi nyata.
-            </p>
-          </div>
-
-          <div className="projects-grid">
-            {projects.map((project) => (
-              <article key={project.number} className="project-card">
-                <div className={`project-visual ${project.imageClass}`}>
-                  <div className="project-building">
-                    <div className="building-top" />
-                    <div className="building-main">
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                  </div>
-                  <div className="project-plant" />
-                  <div className="project-overlay">{project.type}</div>
-                </div>
-                <div className="project-info">
-                  <div className="project-number">{project.number}</div>
-                  <div>
-                    <h3>{project.title}</h3>
-                    <p>{project.location}</p>
-                    <small>{project.description}</small>
-                  </div>
-                  <a href="/contact" aria-label={`Diskusikan ${project.title}`}>
-                    <Arrow />
-                  </a>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="approach" className="section approach-section">
-        <div className="container-main approach-grid">
-          <div className="approach-visual">
-            <div className="material-card">
-              <div className="material-wall" />
-              <div className="material-window">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="material-plant" />
-            </div>
-            <div className="material-caption">
-              <span>RUMAH ARSITEK</span>
-              <strong>Practical · Personal · Professional</strong>
-            </div>
-          </div>
-
-          <div className="approach-copy">
-            <p className="label">05 / Cara kami membantu</p>
-            <h2 className="section-title">
-              Lebih mudah dimulai. Lebih jelas dilanjutkan.
-            </h2>
-            <p className="section-text">
-              Kami percaya kebutuhan desain seharusnya tidak terasa rumit bagi
-              orang yang sedang ingin membangun atau memperbaiki ruangnya.
-            </p>
-
-            <div className="values-list">
-              {values.map((value, index) => (
-                <div className="value-item" key={value.title}>
-                  <span>0{index + 1}</span>
-                  <div>
-                    <h3>{value.title}</h3>
-                    <p>{value.text}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <section id="estimasi" className="bg-[#173d29] py-20 text-white sm:py-28">
+        <div className="mx-auto w-[min(1240px,calc(100%-32px))]">
+          <div className="grid gap-10 lg:grid-cols-[.72fr_1.28fr] lg:items-start">
+            <div><p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#d9b98c]">04 · Estimasi awal</p><h2 className="mt-4 font-serif text-5xl font-normal leading-[.95] tracking-[-.05em] sm:text-6xl">Punya gambaran proyek? Cek angkanya.</h2><p className="mt-6 max-w-md text-sm leading-7 text-white/60">Gunakan estimator sebagai gambaran awal sebelum berkonsultasi. Nilai akhir tetap mengikuti kebutuhan dan lingkup proyek.</p></div>
+            <div className="rounded-[28px] bg-white p-2 text-[#1d211d] shadow-2xl sm:p-4"><ArchitectureEstimator /></div>
           </div>
         </div>
       </section>
 
       <TeamSection />
 
-      <section id="estimator" className="estimator-section">
-        <div className="container-main">
-          <div className="estimator-intro">
-            <p className="label">07 / Estimasi awal</p>
-            <h2 className="section-title">
-              Punya gambaran luas dan jenis proyek?
-              <span> Mulai cek estimasinya.</span>
-            </h2>
-            <p className="section-text">
-              Gunakan estimator sebagai gambaran awal sebelum berdiskusi lebih
-              lanjut. Nilai akhir tetap bergantung pada kebutuhan dan lingkup proyek.
-            </p>
-          </div>
-          <div className="estimator-wrapper">
-            <ArchitectureEstimator />
-          </div>
+      <section id="cara-kerja" className="bg-[#f5f2eb] py-20 sm:py-28">
+        <div className="mx-auto w-[min(1240px,calc(100%-32px))]">
+          <p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#24563b]">05 · Partner profesional</p>
+          <div className="mt-5 grid gap-8 lg:grid-cols-[1fr_.65fr] lg:items-end"><h2 className="font-serif text-5xl font-normal leading-[.92] tracking-[-.05em] sm:text-7xl">Satu pintu untuk memulai.<br /><i>Profesional yang tepat</i> untuk melanjutkan.</h2><p className="text-sm leading-7 text-black/55">RUMAH ARSITEK adalah brand yang membantu mempertemukan kebutuhan proyek dengan tenaga profesional yang sesuai. Kediri adalah titik awal, bukan batas perjalanan.</p></div>
         </div>
       </section>
 
-      <section id="process" className="section process-section">
-        <div className="container-main">
-          <div className="section-heading-row">
-            <div>
-              <p className="label">08 / Cara Kerja</p>
-              <h2 className="section-title">Dari cerita sederhana menuju proyek yang jelas.</h2>
-            </div>
-            <p className="section-heading-description">
-              Anda tidak harus datang dengan brief yang sempurna. Kita mulai dari
-              informasi yang Anda punya sekarang.
-            </p>
-          </div>
-
-          <div className="process-grid">
-            {processSteps.map((step) => (
-              <article key={step.number} className="process-item">
-                <div className="process-number">{step.number}</div>
-                <h3>{step.title}</h3>
-                <p>{step.description}</p>
-              </article>
-            ))}
-          </div>
-        </div>
+      <section className="bg-[#d9b98c] py-16 sm:py-24">
+        <div className="mx-auto grid w-[min(1240px,calc(100%-32px))] gap-10 lg:grid-cols-[1fr_auto] lg:items-center"><div><p className="text-[10px] font-extrabold uppercase tracking-[.22em] text-[#173d29]">06 · Mulai sekarang</p><h2 className="mt-4 max-w-3xl font-serif text-5xl font-normal leading-[.92] tracking-[-.05em] text-[#173d29] sm:text-7xl">Punya rencana ruang?<br />Ceritakan dulu.</h2><p className="mt-5 max-w-xl text-sm leading-6 text-[#173d29]/65">Tidak harus punya gambar. Tidak harus paham istilah teknis. Mulai dari kondisi yang Anda punya sekarang.</p></div><div className="flex flex-col gap-3"><a href={whatsappUrl} target="_blank" rel="noreferrer" className="rounded-full bg-[#173d29] px-7 py-4 text-center text-sm font-extrabold text-white">Chat WhatsApp <Arrow dark /></a><a href="/contact" className="rounded-full border border-[#173d29]/30 px-7 py-4 text-center text-sm font-bold text-[#173d29]">Isi kebutuhan proyek</a></div></div>
       </section>
 
-      <section className="partner-note-section">
-        <div className="container-main partner-note">
-          <div>
-            <p className="label">09 / Jaringan profesional</p>
-            <h2 className="section-title">Satu pintu untuk memulai. Partner yang sesuai untuk melanjutkan.</h2>
+      <footer className="bg-[#101f17] py-12 text-white">
+        <div className="mx-auto w-[min(1240px,calc(100%-32px))]">
+          <div className="grid gap-10 border-b border-white/10 pb-10 md:grid-cols-[1.2fr_.8fr_.8fr]">
+            <div><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full border border-white/30 font-serif text-lg">R</span><strong className="text-sm tracking-[.16em]">RUMAH ARSITEK</strong></div><p className="mt-5 max-w-sm text-sm leading-6 text-white/45">Partner untuk memulai dan menemukan solusi profesional bagi kebutuhan ruang Anda.</p></div>
+            <div className="flex flex-col gap-3 text-xs text-white/55"><a href="#kebutuhan">Kebutuhan</a><a href="#inspirasi">Inspirasi</a><a href="#estimasi">Estimasi</a><a href="#cara-kerja">Cara Kerja</a></div>
+            <div><span className="text-[9px] uppercase tracking-[.2em] text-white/35">Starting point</span><strong className="mt-2 block font-serif text-xl">Kediri, Jawa Timur</strong><a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block text-xs font-bold text-[#d9b98c]">WhatsApp →</a></div>
           </div>
-          <p>
-            RUMAH ARSITEK dibangun sebagai brand yang dapat berkembang bersama
-            jaringan tenaga profesional. Kebutuhan teknis proyek ditangani oleh
-            profesional yang sesuai dengan ruang lingkup dan lokasi pekerjaan.
-          </p>
-        </div>
-      </section>
-
-      <section id="contact" className="contact-section">
-        <div className="container-main contact-grid">
-          <div>
-            <p className="label label-light">10 / Mulai sekarang</p>
-            <h2 className="contact-title">
-              Punya rencana untuk <em>ruang Anda?</em>
-            </h2>
-            <p className="contact-description">
-              Tidak harus sudah memiliki gambar. Tidak harus sudah tahu semua
-              jawabannya. Ceritakan dulu kebutuhan Anda dan kita mulai dari sana.
-            </p>
-          </div>
-
-          <div className="contact-card">
-            <div className="contact-card-top">
-              <span>START A PROJECT</span>
-              <span>01</span>
-            </div>
-            <h3>Konsultasi awal</h3>
-            <p>
-              Diskusikan rencana Anda melalui WhatsApp. Informasi awal yang Anda
-              berikan akan membantu menentukan langkah berikutnya.
-            </p>
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="contact-button"
-            >
-              Chat via WhatsApp <Arrow />
-            </a>
-            <a href="/contact" className="contact-secondary-link">
-              Isi kebutuhan proyek terlebih dahulu <Arrow />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <footer className="site-footer">
-        <div className="container-main footer-grid">
-          <div>
-            <div className="brand footer-brand">
-              <span className="brand-mark">R</span>
-              <span className="brand-copy">
-                <strong>RUMAH ARSITEK</strong>
-                <small>Design · Planning · Professional Network</small>
-              </span>
-            </div>
-            <p className="footer-description">
-              Membantu Anda memulai kebutuhan ruang dan menemukan solusi profesional
-              yang sesuai untuk proyek Anda.
-            </p>
-          </div>
-
-          <div className="footer-links">
-            <a href="#needs">Kebutuhan</a>
-            <a href="#services">Layanan</a>
-            <a href="#projects">Inspirasi</a>
-            <a href="#process">Cara Kerja</a>
-            <a href="#estimator">Estimasi</a>
-            <a href="#contact">Konsultasi</a>
-          </div>
-
-          <div className="footer-location">
-            <span>Starting point</span>
-            <strong>Kediri, Jawa Timur</strong>
-            <span className="footer-location-note">Melayani kebutuhan yang dapat berkembang ke berbagai wilayah.</span>
-          </div>
-        </div>
-
-        <div className="container-main footer-bottom">
-          <span>© {new Date().getFullYear()} RUMAH ARSITEK</span>
-          <span>Designed around your needs.</span>
+          <div className="flex flex-col gap-2 pt-6 text-[9px] uppercase tracking-[.15em] text-white/30 sm:flex-row sm:justify-between"><span>© {new Date().getFullYear()} RUMAH ARSITEK</span><span>Designed around your needs.</span></div>
         </div>
       </footer>
 
-      <a
-        href={whatsappUrl}
-        target="_blank"
-        rel="noreferrer"
-        className="mobile-cta"
-      >
-        Konsultasi via WhatsApp <Arrow />
-      </a>
+      <a href={whatsappUrl} target="_blank" rel="noreferrer" className="fixed bottom-4 left-4 right-4 z-40 rounded-full bg-[#173d29] px-5 py-4 text-center text-sm font-extrabold text-white shadow-2xl sm:hidden">Konsultasi via WhatsApp ↗</a>
     </main>
   );
 }
