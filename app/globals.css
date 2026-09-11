@@ -96,13 +96,34 @@ button { color:inherit; }
 .services-grid-four { grid-template-columns:repeat(4,1fr); }
 
 /* Strong contrast safety net for the Tailwind-heavy homepage. */
-[class*="text-[#69746d]"],[class*="text-[#69756e]"],[class*="text-[#68746d]"],[class*="text-[#68756d]"],[class*="text-[#68766d]"],[class*="text-[#707b74]"],[class*="text-[#6b7770]"],[class*="text-[#7a847e]"],[class*="text-[#728078]"],[class*="text-[#73907c]"],[class*="text-[#71907a]"],[class*="text-[#5e6c63]"],[class*="text-[#647168]"],[class*="text-[#8b704e]"] { color:#3f4c44 !important; }
+[class*="text-[#69746d]"],[class*="text-[#69756e]"],[class*="text-[#68746d]"],[class*="text-[#68756d]"],[class*="text-[#68766d]"],[class*="text-[#707b74]"],[class*="text-[#6b7770]"],[class*="text-[#7a847e]"],[class*="text-[#728078]"],[class*="text-[#73907c]"],[class*="text-[#71907a]"],[class*="text-[#5e6c63]"],[class*="text-[#647168]"],[class*="text-[#8b704e"] { color:#3f4c44 !important; }
 [class*="text-black/45"],[class*="text-black/50"],[class*="text-black/60"],[class*="text-black/65"],[class*="text-black/70"] { color:#454545 !important; }
 [class*="text-white/45"],[class*="text-white/50"],[class*="text-white/55"],[class*="text-white/60"],[class*="text-white/65"],[class*="text-white/70"],[class*="text-white/75"] { color:rgba(255,255,255,.92) !important; }
 [class*="bg-white/55"],[class*="bg-white/70"],[class*="bg-white/75"],[class*="bg-white/85"] { background-color:rgba(255,255,255,.96) !important; }
 
-/* White text on white controls is never acceptable in the idle state. */
-[class*="bg-white"][class*="text-white"], [class*="bg-white/"][class*="text-white"] { background-color:#fff !important; color:#25342b !important; border-color:#aebbb2 !important; }
+/* Explicit idle-state contrast for white buttons on the homepage. */
+[class*="bg-white"][class*="text-[#2f6b4a]"],
+[class*="bg-white/"][class*="text-[#2f6b4a]"] { color:#2f6b4a !important; }
+[class*="bg-white"][class*="text-white"],
+[class*="bg-white/"][class*="text-white"] { background-color:#fff !important; color:#25342b !important; border-color:#aebbb2 !important; }
+
+/* Brand mark: use the RUMAH ARSITEK architectural logo without changing page.tsx. */
+header a.group > span:first-child {
+  width:42px !important;
+  height:42px !important;
+  border-radius:13px !important;
+  border:0 !important;
+  color:transparent !important;
+  background-color:#2f6b4a !important;
+  background-image:url('/logo-rumah-arsitek.svg') !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  background-size:cover !important;
+  overflow:hidden;
+  font-size:0 !important;
+  box-shadow:0 6px 18px rgba(47,107,74,.14);
+}
+header a.group:hover > span:first-child { transform:rotate(2deg) scale(1.03); }
 
 @media (max-width:900px) {
   .desktop-nav,.header-cta { display:none; }
@@ -119,4 +140,5 @@ button { color:inherit; }
   .hero-photo-placeholder { min-height:420px; }
   .needs-grid,.services-grid,.services-grid-four { grid-template-columns:1fr; }
   .section { padding:76px 0; }
+  header a.group > span:first-child { width:40px !important; height:40px !important; }
 }
