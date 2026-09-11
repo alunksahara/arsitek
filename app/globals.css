@@ -105,9 +105,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .services-grid-four { grid-template-columns:repeat(4,1fr); }
 
 /* Accessibility / contrast pass for the current RUMAH ARSITEK homepage. */
-[class*="text-[#69746d]"],[class*="text-[#69756e]"],[class*="text-[#68746d]"],[class*="text-[#68756d]"],[class*="text-[#707b74]"],[class*="text-[#6b7770]"],[class*="text-[#7a847e]"],[class*="text-[#728078]"],[class*="text-[#73907c]"],[class*="text-[#71907a]"],[class*="text-[#5e6c63]"],[class*="text-[#647168]"] { color:#46554c !important; }
-[class*="text-white/55"],[class*="text-white/70"],[class*="text-white/75"] { color:rgba(255,255,255,.9) !important; }
-[class*="bg-white/55"],[class*="bg-white/75"],[class*="bg-white/85"] { background-color:rgba(255,255,255,.9) !important; }
+[class*="text-[#69746d]"],[class*="text-[#69756e]"],[class*="text-[#68746d]"],[class*="text-[#68756d]"],[class*="text-[#68766d]"],[class*="text-[#707b74]"],[class*="text-[#6b7770]"],[class*="text-[#7a847e]"],[class*="text-[#728078]"],[class*="text-[#73907c]"],[class*="text-[#71907a]"],[class*="text-[#5e6c63]"],[class*="text-[#647168]"],[class*="text-[#8b704e]"],[class*="text-[#8b704e]"] { color:#3f4c44 !important; }
+[class*="text-black/45"],[class*="text-black/50"],[class*="text-black/60"],[class*="text-black/65"],[class*="text-black/70"] { color:#454545 !important; }
+[class*="text-white/45"],[class*="text-white/50"],[class*="text-white/55"],[class*="text-white/60"],[class*="text-white/65"],[class*="text-white/70"],[class*="text-white/75"] { color:rgba(255,255,255,.9) !important; }
+[class*="bg-white/55"],[class*="bg-white/70"],[class*="bg-white/75"],[class*="bg-white/85"] { background-color:rgba(255,255,255,.94) !important; }
 
 @media (max-width:900px) {
   .desktop-nav,.header-cta { display:none; }
