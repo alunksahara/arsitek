@@ -107,6 +107,16 @@ button { color:inherit; }
 [class*="bg-white"][class*="text-white"],
 [class*="bg-white/"][class*="text-white"] { background-color:#fff !important; color:#25342b !important; border-color:#aebbb2 !important; }
 
+/* Dark CTA contrast: white text must stay white even if a generic link rule or
+   another utility class competes with Tailwind's text-white utility. */
+[class*="bg-[#2f6b4a]"][class*="text-white"],
+[class*="bg-[#255a3e]"][class*="text-white"],
+[class*="bg-[#255c45]"][class*="text-white"],
+[class*="bg-black"][class*="text-white"],
+[class*="bg-[#173d29]"][class*="text-white"] {
+  color:#ffffff !important;
+}
+
 /* Brand mark: use the RUMAH ARSITEK architectural logo without changing page.tsx. */
 header a.group > span:first-child {
   width:42px !important;
