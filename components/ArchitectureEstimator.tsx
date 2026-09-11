@@ -233,20 +233,19 @@ export default function ArchitectureEstimator() {
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          {/* LEFT */}
           <div>
-            <div className="mb-5 inline-flex rounded-full border border-black/10 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-black/65">
+            <div className="mb-5 inline-flex rounded-full border border-black/10 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#3f3f3f]">
               Architecture Estimator
             </div>
 
             <h2 className="max-w-xl font-serif text-4xl leading-[1.05] tracking-[-0.03em] text-black sm:text-5xl">
               Dapatkan gambaran
-              <span className="block text-black/65">
+              <span className="block text-[#454545]">
                 investasi desain Anda.
               </span>
             </h2>
 
-            <p className="mt-6 max-w-xl text-base leading-7 text-black/65">
+            <p className="mt-6 max-w-xl text-base leading-7 text-[#3f3f3f]">
               Gunakan estimator ini sebagai gambaran
               awal biaya jasa desain arsitektur.
               Nilai akhir dapat berubah sesuai
@@ -254,12 +253,12 @@ export default function ArchitectureEstimator() {
               kebutuhan ruang, dan lingkup pekerjaan.
             </p>
 
-            <div className="mt-8 rounded-2xl border border-black/10 bg-white/60 p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-black/50">
+            <div className="mt-8 rounded-2xl border border-black/10 bg-white/70 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#4a4a4a]">
                 Catatan
               </p>
 
-              <p className="mt-2 text-sm leading-6 text-black/60">
+              <p className="mt-2 text-sm leading-6 text-[#444444]">
                 Estimasi dihitung berdasarkan luas
                 bangunan × rate desain × multiplier
                 jenis proyek.
@@ -267,9 +266,7 @@ export default function ArchitectureEstimator() {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className="rounded-3xl border border-black/10 bg-white p-5 shadow-[0_20px_70px_rgba(0,0,0,0.08)] sm:p-7">
-            {/* PROJECT TYPE */}
             <div>
               <label className="text-sm font-semibold text-black">
                 Jenis proyek
@@ -295,7 +292,7 @@ export default function ArchitectureEstimator() {
                         "rounded-xl border px-4 py-3 text-left text-sm font-semibold transition",
                         active
                           ? "border-black bg-black text-white"
-                          : "border-black/10 bg-white text-black/70 hover:border-black/30",
+                          : "border-black/10 bg-white text-[#333333] hover:border-black/30",
                       ].join(" ")}
                     >
                       {PROJECT_LABELS[type]}
@@ -305,7 +302,6 @@ export default function ArchitectureEstimator() {
               </div>
             </div>
 
-            {/* DESIGN LEVEL */}
             <div className="mt-7">
               <label className="text-sm font-semibold text-black">
                 Paket desain
@@ -331,7 +327,7 @@ export default function ArchitectureEstimator() {
                         "rounded-xl border px-4 py-3 text-left text-sm font-semibold transition",
                         active
                           ? "border-[#255c45] bg-[#255c45] text-white"
-                          : "border-black/10 bg-white text-black/70 hover:border-black/30",
+                          : "border-black/10 bg-white text-[#333333] hover:border-black/30",
                       ].join(" ")}
                     >
                       {DESIGN_LABELS[level]}
@@ -341,7 +337,6 @@ export default function ArchitectureEstimator() {
               </div>
             </div>
 
-            {/* AREA */}
             <div className="mt-7">
               <div className="flex items-center justify-between">
                 <label
@@ -391,22 +386,21 @@ export default function ArchitectureEstimator() {
                 />
               </div>
 
-              <p className="mt-2 text-xs text-black/45">
+              <p className="mt-2 text-xs text-[#555555]">
                 Minimum luas:
                 {" "}
                 {settings.min_area} m²
               </p>
             </div>
 
-            {/* RESULT */}
             <div className="mt-8 rounded-2xl bg-black p-5 text-white sm:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/50">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/90">
                     Estimasi investasi
                   </p>
 
-                  <p className="mt-2 text-sm text-white/60">
+                  <p className="mt-2 text-sm text-white/90">
                     {calculation.area} m² ·{" "}
                     {projectType} ·{" "}
                     {designLevel}
@@ -414,7 +408,7 @@ export default function ArchitectureEstimator() {
                 </div>
 
                 {loadingSettings && (
-                  <span className="text-xs text-white/50">
+                  <span className="text-xs text-white/90">
                     Memuat...
                   </span>
                 )}
@@ -427,7 +421,7 @@ export default function ArchitectureEstimator() {
                   )}
                 </p>
 
-                <div className="my-2 text-sm text-white/45">
+                <div className="my-2 text-sm text-white/90">
                   sampai
                 </div>
 
@@ -438,13 +432,12 @@ export default function ArchitectureEstimator() {
                 </p>
               </div>
 
-              <div className="mt-5 border-t border-white/10 pt-4 text-xs leading-5 text-white/45">
+              <div className="mt-5 border-t border-white/10 pt-4 text-xs leading-5 text-white/90">
                 Angka ini merupakan estimasi awal,
                 bukan quotation final.
               </div>
             </div>
 
-            {/* CTA */}
             <a
               href="#contact"
               className="mt-5 flex w-full items-center justify-center rounded-xl bg-[#255c45] px-5 py-4 text-sm font-bold text-white transition hover:bg-[#1d4c39]"
