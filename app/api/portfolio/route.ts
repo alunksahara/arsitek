@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     const category = cleanString(body.category, 120);
     const description = cleanString(body.description, 5000);
     const featured = normalizeBoolean(body.featured, false);
-    const published = normalizeBoolean(body.published, true);
+    const published = normalizeBoolean(body.published, false);
     const rawSortOrder = body.sort_order === undefined ? 0 : Number(body.sort_order);
 
     if (!Number.isFinite(rawSortOrder)) {

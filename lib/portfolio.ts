@@ -10,6 +10,18 @@ function normalize(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+function getLocationTokens(value: string) {
+  const normalized = normalize(value);
+  const tokens = new Set<string>([normalized]);
+
+  for (const separator of ["·", "|", ","]) {
+    const first = normalized.split(separator)[0]?.trim();
+    if (first) tokens.add(first);
+  }
+
+  return tokens;
+}
+
 /**
  * Resolves legacy portfolio text into the existing canonical Service + Location
  * entities without changing the portfolio database schema.
@@ -20,6 +32,7 @@ export function resolvePortfolioRelations(
 ): PortfolioRelation {
   const service = project.category ? findService(project.category) : null;
   const rawLocation = normalize(project.location || "");
+  const projectTokens = getLocationTokens(rawLocation);
 
   if (!rawLocation) return { service, location: null };
 
@@ -27,7 +40,13 @@ export function resolvePortfolioRelations(
     locations.find((item) => {
       const city = normalize(item.city);
       const slug = normalize(item.slug);
-      return rawLocation === city || rawLocation === slug || rawLocation.startsWith(`${city},`);
+
+      return (
+        projectTokens.has(city) ||
+        projectTokens.has(slug) ||
+        rawLocation.startsWith(`${city},`) ||
+        rawLocation.startsWith(`${city} `)
+      );
     }) || null;
 
   return { service, location };
