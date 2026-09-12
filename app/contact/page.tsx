@@ -11,6 +11,13 @@ type EstimatorLeadContext = {
   area: number;
   estimatedMin: number;
   estimatedMax: number;
+  landArea?: number | null;
+  floors?: number;
+  condition?: string;
+  needs?: string[];
+  city?: string;
+  province?: string;
+  timeline?: string;
 };
 
 function formatRupiah(value: number) {
@@ -98,6 +105,12 @@ export default function ContactPage() {
           estimatorContext
             ? `Estimator: ${estimatorContext.area} m² · ${estimatorContext.designLevel} · ${formatRupiah(estimatorContext.estimatedMin)} – ${formatRupiah(estimatorContext.estimatedMax)}`
             : "",
+          estimatorContext?.city
+            ? `Lokasi: ${estimatorContext.city}${estimatorContext.province ? `, ${estimatorContext.province}` : ""}`
+            : "",
+          estimatorContext?.timeline
+            ? `Target waktu: ${estimatorContext.timeline}`
+            : "",
           "",
           `Detail proyek: ${message || "-"}`,
         ].filter(Boolean).join("\n");
@@ -129,13 +142,27 @@ export default function ContactPage() {
 
           {estimatorContext && !success && (
             <div className="mt-8 border border-[#cfc9be] bg-white/70 p-5 md:mt-10 md:p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#24563b]">Estimasi Anda</p>
-              <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
-                <div><span className="text-[#77736c]">Proyek</span><p className="font-semibold text-[#171715]">{estimatorContext.projectType}</p></div>
-                <div><span className="text-[#77736c]">Paket · Luas</span><p className="font-semibold text-[#171715]">{estimatorContext.designLevel} · {estimatorContext.area} m²</p></div>
-                <div><span className="text-[#77736c]">Rentang estimasi</span><p className="font-semibold text-[#171715]">{formatRupiah(estimatorContext.estimatedMin)} – {formatRupiah(estimatorContext.estimatedMax)}</p></div>
+              <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#24563b]">Project brief dari Estimator</p>
+                  <p className="mt-1 text-sm text-[#77736c]">Data ini akan ikut tercatat pada lead konsultasi.</p>
+                </div>
+                <span className="text-xs font-semibold text-[#77736c]">{estimatorContext.projectType}</span>
               </div>
-              <p className="mt-4 text-xs leading-5 text-[#77736c]">Data estimasi ini akan ikut tercatat pada lead konsultasi. Anda tetap dapat menyesuaikan detail proyek di bawah.</p>
+              <div className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                <div><span className="text-[#77736c]">Paket · Luas bangunan</span><p className="font-semibold text-[#171715]">{estimatorContext.designLevel} · {estimatorContext.area} m²</p></div>
+                <div><span className="text-[#77736c]">Rentang estimasi</span><p className="font-semibold text-[#171715]">{formatRupiah(estimatorContext.estimatedMin)} – {formatRupiah(estimatorContext.estimatedMax)}</p></div>
+                <div><span className="text-[#77736c]">Luas tanah</span><p className="font-semibold text-[#171715]">{estimatorContext.landArea ? `${estimatorContext.landArea} m²` : "Belum diisi"}</p></div>
+                <div><span className="text-[#77736c]">Lantai · Kondisi</span><p className="font-semibold text-[#171715]">{estimatorContext.floors || 1} lantai · {estimatorContext.condition || "-"}</p></div>
+                <div><span className="text-[#77736c]">Lokasi</span><p className="font-semibold text-[#171715]">{estimatorContext.city || "-"}{estimatorContext.province ? `, ${estimatorContext.province}` : ""}</p></div>
+                <div><span className="text-[#77736c]">Target waktu</span><p className="font-semibold text-[#171715]">{estimatorContext.timeline || "-"}</p></div>
+              </div>
+              {estimatorContext.needs?.length ? (
+                <div className="mt-5 border-t border-[#d9d3ca] pt-4">
+                  <span className="text-xs text-[#77736c]">Kebutuhan yang dipilih</span>
+                  <p className="mt-1 text-sm leading-6 text-[#343731]">{estimatorContext.needs.join(" · ")}</p>
+                </div>
+              ) : null}
             </div>
           )}
 
