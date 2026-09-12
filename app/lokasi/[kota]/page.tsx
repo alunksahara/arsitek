@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPublishedLocation } from "@/lib/public-content";
+import { findService } from "@/lib/services";
 
 export const revalidate = 60;
 
@@ -28,6 +29,10 @@ export default async function LocationPage({ params }: { params: Promise<{ kota:
   const services = Array.isArray(location.services) ? location.services : [];
   const process = Array.isArray(location.process) ? location.process : [];
   const faqs = Array.isArray(location.faqs) ? location.faqs : [];
+  const matchedServices = services
+    .map((service) => findService(service))
+    .filter((service): service is NonNullable<typeof service> => Boolean(service));
+  const uniqueServices = Array.from(new Map(matchedServices.map((service) => [service.slug, service])).values());
 
   return (
     <main className="min-h-screen bg-[#fbfaf6] text-[#25342b]">
@@ -39,6 +44,7 @@ export default async function LocationPage({ params }: { params: Promise<{ kota:
           </Link>
           <nav className="flex items-center gap-4 text-sm font-bold sm:gap-7" aria-label="Navigasi lokasi">
             <Link href="/" className="text-[#3f4c44] hover:text-[#2f6b4a]">Beranda</Link>
+            <Link href="/services" className="text-[#3f4c44] hover:text-[#2f6b4a]">Layanan</Link>
             <Link href="/lokasi" className="text-[#2f6b4a]">Lokasi</Link>
             <Link href="/projects" className="hidden text-[#3f4c44] hover:text-[#2f6b4a] sm:inline">Inspirasi</Link>
             <Link href="/#contact" className="rounded-full bg-[#2f6b4a] px-4 py-2.5 text-white hover:bg-[#173d29]">Konsultasi</Link>
@@ -57,13 +63,38 @@ export default async function LocationPage({ params }: { params: Promise<{ kota:
           )}
           {services.length > 0 && (
             <div className="mt-8 flex flex-wrap gap-2">
-              {services.map((service: string) => (
-                <span key={service} className="rounded-full bg-white/80 px-4 py-2 text-xs font-bold text-[#3f4c44] ring-1 ring-[#d5e3d5]">{service}</span>
-              ))}
+              {services.map((service: string) => {
+                const matched = findService(service);
+                return matched ? (
+                  <Link key={service} href={`#${matched.slug}`} className="rounded-full bg-white/80 px-4 py-2 text-xs font-bold text-[#3f4c44] ring-1 ring-[#d5e3d5] hover:bg-white">{matched.shortLabel}</Link>
+                ) : (
+                  <span key={service} className="rounded-full bg-white/80 px-4 py-2 text-xs font-bold text-[#3f4c44] ring-1 ring-[#d5e3d5]">{service}</span>
+                );
+              })}
             </div>
           )}
         </div>
       </section>
+
+      {uniqueServices.length > 0 && (
+        <section className="border-b border-[#dce5dd] bg-white py-16 sm:py-24">
+          <div className="mx-auto w-[min(1180px,calc(100%-32px))]">
+            <div className="max-w-3xl">
+              <p className="text-xs font-black uppercase tracking-[.16em] text-[#2f6b4a]">Layanan di {location.city}</p>
+              <h2 className="mt-3 font-serif text-4xl font-normal tracking-[-.035em] sm:text-5xl">Pilih titik awal yang paling dekat dengan kebutuhan Anda.</h2>
+            </div>
+            <div className="mt-10 grid gap-4 md:grid-cols-2">
+              {uniqueServices.map((service) => (
+                <article id={service.slug} key={service.slug} className="scroll-mt-24 rounded-3xl border border-[#d8e0d9] bg-[#fbfaf6] p-7">
+                  <h3 className="font-serif text-3xl font-normal text-[#25342b]">{service.label}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#3f4c44]">{service.description}</p>
+                  <Link href={`/services#${service.slug}`} className="mt-5 inline-flex text-sm font-black text-[#2f6b4a]">Pelajari layanan →</Link>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {process.length > 0 && (
         <section className="mx-auto grid w-[min(1180px,calc(100%-32px))] gap-12 py-16 sm:py-24 lg:grid-cols-[.8fr_1.2fr]">
