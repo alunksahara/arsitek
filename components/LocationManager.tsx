@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SERVICES } from "@/lib/services";
 
 type FAQ = { question: string; answer: string };
 type Location = {
@@ -22,7 +23,7 @@ type Location = {
 
 const emptyLocation: Location = {
   city: "", slug: "", province: "Jawa Timur", seo_title: "", seo_description: "", h1: "", intro: "", local_context: "",
-  services: ["Desain rumah tinggal", "Interior & eksterior", "Renovasi & pengembangan desain"],
+  services: SERVICES.map((service) => service.label),
   process: ["Konsultasi kebutuhan", "Konsep & eksplorasi desain", "Pengembangan gambar", "Persiapan menuju pelaksanaan"],
   faqs: [{ question: "", answer: "" }], published: true, sort_order: 0,
 };
@@ -102,7 +103,12 @@ export default function LocationManager({ embedded = false }: { embedded?: boole
         </div>
 
         <div className="mt-7 grid gap-7 md:grid-cols-2">
-          <div><h3 className="font-semibold">Layanan</h3>{form.services.map((v, i) => <input key={i} className={inputClass} value={v} onChange={(e) => updateArray("services", i, e.target.value)} />)}<button onClick={() => setForm({ ...form, services: [...form.services, ""] })} className="mt-2 text-sm underline">+ Tambah layanan</button></div>
+          <div>
+            <h3 className="font-semibold">Layanan</h3>
+            <p className="mt-1 text-xs leading-5 text-neutral-500">Gunakan nama layanan utama agar hubungan layanan ↔ lokasi tetap konsisten. Anda masih dapat menambahkan istilah lokal bila diperlukan.</p>
+            {form.services.map((v, i) => <input key={i} className={inputClass} value={v} onChange={(e) => updateArray("services", i, e.target.value)} />)}
+            <button onClick={() => setForm({ ...form, services: [...form.services, ""] })} className="mt-2 text-sm underline">+ Tambah layanan</button>
+          </div>
           <div><h3 className="font-semibold">Proses</h3>{form.process.map((v, i) => <input key={i} className={inputClass} value={v} onChange={(e) => updateArray("process", i, e.target.value)} />)}<button onClick={() => setForm({ ...form, process: [...form.process, ""] })} className="mt-2 text-sm underline">+ Tambah proses</button></div>
         </div>
 
