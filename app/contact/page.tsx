@@ -14,7 +14,6 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     const form = e.currentTarget;
     const data = new FormData(form);
     const name = String(data.get("name") || "").trim();
@@ -32,7 +31,6 @@ export default function ContactPage() {
         body: JSON.stringify({ name, phone, email, projectType, budget, message, turnstileToken }),
       });
       const result = await response.json();
-
       if (!response.ok) {
         setError(result?.error || "Terjadi kesalahan. Silakan coba lagi.");
         return;
@@ -53,7 +51,6 @@ export default function ContactPage() {
         ].join("\n");
         setWhatsappUrl(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`);
       }
-
       setSuccess(true);
       form.reset();
     } catch (err) {
@@ -89,7 +86,7 @@ export default function ContactPage() {
             <form onSubmit={submitForm} className="mt-10 grid gap-8 md:mt-14">
               <div className="grid gap-8 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[#343731]">Nama lengkap<input name="name" required autoComplete="name" placeholder="Nama Anda" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
-                <label className="grid gap-2 text-sm font-semibold text-[#343731]">WhatsApp / Telepon<input name="phone" required autoComplete="tel" inputMode="tel" placeholder="08xxxxxxxxxx" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
+                <label className="grid gap-2 text-sm font-semibold text-[#343731]">WhatsApp / Telepon<input name="phone" required autoComplete="tel" inputMode="tel" placeholder="08xxxxxxxxxx" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d]" /></label>
               </div>
               <div className="grid gap-8 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[#343731]">Email<input name="email" type="email" autoComplete="email" placeholder="nama@email.com" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
@@ -99,7 +96,10 @@ export default function ContactPage() {
               <label className="grid gap-2 text-sm font-semibold text-[#343731]">Ceritakan proyek Anda<textarea name="message" rows={6} placeholder="Contoh: luas tanah, lokasi, kebutuhan ruang, gaya yang disukai, target waktu, atau hal lain yang penting bagi Anda." className="resize-y border border-[#cfc9be] bg-white/40 p-4 font-normal outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
               <div className="pt-1"><Turnstile /></div>
               {error && <p role="alert" className="text-sm font-medium text-red-700">{error}</p>}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center"><button type="submit" disabled={loading} className="inline-flex min-h-14 items-center justify-center gap-3 bg-[#171715] px-8 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#24563b] disabled:cursor-not-allowed disabled:opacity-50">{loading ? "Mengirim..." : "Kirim konsultasi"}</button><p className="max-w-md text-xs leading-5 text-[#77736c]">Lead disimpan terlebih dahulu. Setelah berhasil, Anda dapat memilih melanjutkan percakapan melalui WhatsApp.</p></div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <button type="submit" disabled={loading} className="inline-flex min-h-14 items-center justify-center gap-3 rounded-xl bg-[#24563b] px-8 text-xs font-bold uppercase tracking-[0.18em] !text-white shadow-md transition hover:bg-[#173d29] disabled:cursor-not-allowed disabled:opacity-50">{loading ? "Mengirim..." : "Kirim konsultasi"}</button>
+                <p className="max-w-md text-xs leading-5 text-[#77736c]">Lead disimpan terlebih dahulu. Setelah berhasil, Anda dapat memilih melanjutkan percakapan melalui WhatsApp.</p>
+              </div>
             </form>
           )}
           <div className="mt-14 flex items-center gap-3 border-t border-[#cfc9be] pt-5 text-xs text-[#77736c] md:mt-20"><MessageCircle size={16} aria-hidden="true" />Konsultasi awal untuk proyek arsitektur, renovasi, dan interior.</div>
