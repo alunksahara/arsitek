@@ -28,6 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/services`, lastModified: now },
     { url: `${SITE_URL}/lokasi`, lastModified: now },
     { url: `${SITE_URL}/projects`, lastModified: now },
+    { url: `${SITE_URL}/karier`, lastModified: now },
     { url: `${SITE_URL}/contact`, lastModified: now },
     ...(locations || []).map((location) => ({
       url: `${SITE_URL}/lokasi/${location.slug}`,
