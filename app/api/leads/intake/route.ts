@@ -13,6 +13,21 @@ function cleanNumber(value: unknown, min = 0, max = 1000000000000): number | nul
   return number;
 }
 
+function cleanInteger(value: unknown, min = 1, max = 100): number | null {
+  const number = cleanNumber(value, min, max);
+  return number === null ? null : Math.round(number);
+}
+
+function cleanNeeds(value: unknown): string | null {
+  if (!Array.isArray(value)) return null;
+  const items = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => item.trim().slice(0, 120))
+    .filter(Boolean)
+    .slice(0, 12);
+  return items.length ? items.join(" | ") : null;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -33,9 +48,16 @@ export async function POST(request: Request) {
     const estimator = body?.estimatorContext;
     const estimatorProjectType = cleanString(estimator?.projectType, 120) || null;
     const estimatorDesignLevel = cleanString(estimator?.designLevel, 50) || null;
-    const estimatorArea = cleanNumber(estimator?.area, 1, 100000) ?? null;
-    const estimatorEstimatedMin = cleanNumber(estimator?.estimatedMin, 0, 1000000000000) ?? null;
-    const estimatorEstimatedMax = cleanNumber(estimator?.estimatedMax, 0, 1000000000000) ?? null;
+    const estimatorArea = cleanNumber(estimator?.area, 1, 100000);
+    const estimatorEstimatedMin = cleanNumber(estimator?.estimatedMin, 0, 1000000000000);
+    const estimatorEstimatedMax = cleanNumber(estimator?.estimatedMax, 0, 1000000000000);
+    const estimatorLandArea = cleanNumber(estimator?.landArea, 1, 100000);
+    const estimatorFloors = cleanInteger(estimator?.floors, 1, 100);
+    const estimatorCondition = cleanString(estimator?.condition, 120) || null;
+    const estimatorNeeds = cleanNeeds(estimator?.needs);
+    const estimatorCity = cleanString(estimator?.city, 120) || null;
+    const estimatorProvince = cleanString(estimator?.province, 120) || null;
+    const estimatorTimeline = cleanString(estimator?.timeline, 80) || null;
 
     const turnstileToken = cleanString(body?.turnstileToken, 5000);
     const ip =
@@ -74,6 +96,13 @@ export async function POST(request: Request) {
         estimator_area: estimatorArea,
         estimator_estimated_min: estimatorEstimatedMin,
         estimator_estimated_max: estimatorEstimatedMax,
+        estimator_land_area: estimatorLandArea,
+        estimator_floors: estimatorFloors,
+        estimator_condition: estimatorCondition,
+        estimator_needs: estimatorNeeds,
+        estimator_city: estimatorCity,
+        estimator_province: estimatorProvince,
+        estimator_timeline: estimatorTimeline,
         status: "new",
       })
       .select()
