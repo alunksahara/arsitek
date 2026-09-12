@@ -15,7 +15,7 @@ export default function AdminDashboardShell({ role }: { role: UserRole }) {
   const [tab, setTab] = useState<MainTab>(isAdmin ? "dashboard" : "locations");
 
   return (
-    <main className="min-h-screen bg-[#f7f5f0] text-[#181817]">
+    <main className="admin-dashboard-shell min-h-screen bg-[#f7f5f0] text-[#181817]">
       <div className="border-b border-[#d5d0c7] bg-[#f7f5f0]/95 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3">
           <div>
@@ -50,7 +50,9 @@ export default function AdminDashboardShell({ role }: { role: UserRole }) {
       </div>
 
       {tab === "dashboard" && isAdmin ? (
-        <AdminDashboard />
+        <div className="[&>main>header+div>div:first-child>button:nth-child(3)]:hidden">
+          <AdminDashboard />
+        </div>
       ) : tab === "estimator" && isAdmin ? (
         <EstimatorAdminPanel />
       ) : tab === "team" && isAdmin ? (
