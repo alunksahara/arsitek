@@ -7,6 +7,12 @@ function cleanString(value: unknown, maxLength = 1000): string {
   return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 }
 
+function cleanNumber(value: unknown, min = 0, max = 1000000000000): number | null {
+  const number = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(number) || number < min || number > max) return null;
+  return number;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -23,6 +29,13 @@ export async function POST(request: Request) {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return jsonError("Format email tidak valid.", 422);
     }
+
+    const estimator = body?.estimatorContext;
+    const estimatorProjectType = cleanString(estimator?.projectType, 120) || null;
+    const estimatorDesignLevel = cleanString(estimator?.designLevel, 50) || null;
+    const estimatorArea = cleanNumber(estimator?.area, 1, 100000) ?? null;
+    const estimatorEstimatedMin = cleanNumber(estimator?.estimatedMin, 0, 1000000000000) ?? null;
+    const estimatorEstimatedMax = cleanNumber(estimator?.estimatedMax, 0, 1000000000000) ?? null;
 
     const turnstileToken = cleanString(body?.turnstileToken, 5000);
     const ip =
@@ -56,6 +69,11 @@ export async function POST(request: Request) {
         project_type: projectType,
         budget: budget || null,
         message: message || null,
+        estimator_project_type: estimatorProjectType,
+        estimator_design_level: estimatorDesignLevel,
+        estimator_area: estimatorArea,
+        estimator_estimated_min: estimatorEstimatedMin,
+        estimator_estimated_max: estimatorEstimatedMax,
         status: "new",
       })
       .select()
