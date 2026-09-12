@@ -1,39 +1,51 @@
 import Link from "next/link";
+import { createServerSupabase } from "@/lib/supabase-server";
 
-const projects = [
-  {
-    title: "Rumah dengan cahaya alami",
-    category: "Rumah",
-    description: "Inspirasi rumah yang menempatkan cahaya, sirkulasi, dan kenyamanan keluarga sebagai bagian dari pengalaman ruang.",
-    image: "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1400&q=88",
-  },
-  {
-    title: "Renovasi ruang keluarga",
-    category: "Renovasi",
-    description: "Contoh pendekatan renovasi yang berangkat dari masalah ruang dan kebutuhan aktivitas sehari-hari.",
-    image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1400&q=88",
-  },
-  {
-    title: "Interior yang terasa personal",
-    category: "Interior",
-    description: "Inspirasi interior yang mengutamakan fungsi, penyimpanan, material, dan karakter penghuni.",
-    image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1400&q=88",
-  },
-  {
-    title: "Ruang usaha yang bekerja",
-    category: "Ruang Usaha",
-    description: "Ruang komersial perlu menarik sekaligus membantu alur pengguna dan aktivitas bisnis berjalan lebih baik.",
-    image: "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1400&q=88",
-  },
-];
+export const revalidate = 60;
 
 export const metadata = {
   title: "Inspirasi Rumah, Renovasi & Interior | RUMAH ARSITEK",
-  description: "Jelajahi inspirasi desain rumah, renovasi, interior, dan ruang usaha dari RUMAH ARSITEK.",
+  description:
+    "Jelajahi inspirasi desain rumah, renovasi, interior, dan ruang usaha dari RUMAH ARSITEK.",
   alternates: { canonical: "/projects" },
 };
 
-export default function ProjectsPage() {
+type Project = {
+  id: string;
+  title: string;
+  slug: string;
+  location: string | null;
+  category: string | null;
+  image_url: string;
+  description: string | null;
+  featured: boolean;
+  published: boolean;
+  sort_order: number;
+};
+
+async function getProjects(): Promise<Project[]> {
+  const supabase = await createServerSupabase();
+  const { data, error } = await supabase
+    .from("portfolio_projects")
+    .select(
+      "id,title,slug,location,category,image_url,description,featured,published,sort_order"
+    )
+    .eq("published", true)
+    .order("featured", { ascending: false })
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("[PUBLIC PORTFOLIO]", error);
+    return [];
+  }
+
+  return (data || []) as Project[];
+}
+
+export default async function ProjectsPage() {
+  const projects = await getProjects();
+
   return (
     <main className="min-h-screen bg-[#fbfaf6] text-[#25342b]">
       <header className="sticky top-0 z-40 border-b border-[#e6e9e3] bg-[#fbfaf6]/95 backdrop-blur-xl">
@@ -60,20 +72,41 @@ export default function ProjectsPage() {
       </section>
 
       <section className="mx-auto w-[min(1180px,calc(100%-32px))] py-16 sm:py-24">
-        <div className="grid gap-7 md:grid-cols-2">
-          {projects.map((project) => (
-            <article key={project.title} className="group overflow-hidden rounded-[30px] border border-[#d8e0d9] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-              <div className="overflow-hidden p-2">
-                <img src={project.image} alt={project.title} className="h-[300px] w-full rounded-[23px] object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[390px]" />
-              </div>
-              <div className="p-7 sm:p-8">
-                <p className="text-xs font-black uppercase tracking-[.14em] text-[#2f6b4a]">{project.category}</p>
-                <h2 className="mt-3 font-serif text-3xl font-normal tracking-[-.03em]">{project.title}</h2>
-                <p className="mt-3 text-sm leading-7 text-[#3f4c44]">{project.description}</p>
-              </div>
-            </article>
-          ))}
+        <div className="mb-10 max-w-2xl">
+          <p className="text-xs font-black uppercase tracking-[.16em] text-[#2f6b4a]">Portfolio terpilih</p>
+          <h2 className="mt-3 font-serif text-4xl font-normal tracking-[-.035em] sm:text-5xl">Ruang yang lahir dari kebutuhan yang berbeda.</h2>
         </div>
+
+        {projects.length === 0 ? (
+          <div className="rounded-3xl border border-[#d8e0d9] bg-white p-8 text-[#3f4c44] shadow-sm">
+            Portfolio sedang disiapkan. Untuk kebutuhan desain, renovasi, interior, atau ruang usaha, Anda tetap bisa memulai dengan konsultasi.
+          </div>
+        ) : (
+          <div className="grid gap-7 md:grid-cols-2">
+            {projects.map((project) => (
+              <article key={project.id} className="group overflow-hidden rounded-[30px] border border-[#d8e0d9] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                <div className="overflow-hidden p-2">
+                  <img
+                    src={project.image_url}
+                    alt={project.title}
+                    loading="lazy"
+                    className="h-[300px] w-full rounded-[23px] object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[390px]"
+                  />
+                </div>
+                <div className="p-7 sm:p-8">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[.14em] text-[#2f6b4a]">
+                    {project.category && <span>{project.category}</span>}
+                    {project.location && <span className="text-[#6a766f]">· {project.location}</span>}
+                  </div>
+                  <h2 className="mt-3 font-serif text-3xl font-normal tracking-[-.03em]">{project.title}</h2>
+                  {project.description && (
+                    <p className="mt-3 text-sm leading-7 text-[#3f4c44]">{project.description}</p>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="border-y border-[#dce5dd] bg-[#f3eee5]">
