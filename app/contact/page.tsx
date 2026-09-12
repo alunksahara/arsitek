@@ -8,6 +8,7 @@ export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [whatsappUrl, setWhatsappUrl] = useState("");
 
   async function submitForm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -28,7 +29,15 @@ export default function ContactPage() {
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, projectType, budget, message, turnstileToken }),
+        body: JSON.stringify({
+          name,
+          phone,
+          email,
+          projectType,
+          budget,
+          message,
+          turnstileToken,
+        }),
       });
       const result = await response.json();
 
@@ -38,13 +47,10 @@ export default function ContactPage() {
         return;
       }
 
-      setSuccess(true);
-      form.reset();
       const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim();
-
       if (whatsappNumber) {
         const whatsappMessage = [
-          "Halo RUMAH ARSITEK, saya ingin berkonsultasi mengenai proyek arsitektur.",
+          "Halo RUMAH ARSITEK, saya ingin melanjutkan konsultasi mengenai proyek saya.",
           "",
           `Nama: ${name}`,
           `WhatsApp: ${phone}`,
@@ -54,13 +60,17 @@ export default function ContactPage() {
           "",
           `Detail proyek: ${message || "-"}`,
         ].join("\n");
-        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
-        window.setTimeout(() => { window.location.href = whatsappUrl; }, 700);
+        setWhatsappUrl(
+          `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`
+        );
       }
-      setLoading(false);
+
+      setSuccess(true);
+      form.reset();
     } catch (err) {
       console.error("[CONTACT FORM ERROR]", err);
       setError("Tidak dapat mengirim formulir. Periksa koneksi Anda lalu coba lagi.");
+    } finally {
       setLoading(false);
     }
   }
@@ -83,21 +93,27 @@ export default function ContactPage() {
             </h1>
             <p className="mt-7 max-w-2xl text-base leading-7 text-[#77736c] md:text-lg">
               Ceritakan kebutuhan, jenis proyek, dan gambaran anggaran Anda.
-              Tim RUMAH ARSITEK akan menggunakan informasi ini sebagai awal diskusi.
+              Informasi ini disimpan sebagai lead konsultasi agar tim dapat memahami kebutuhan Anda sebelum tindak lanjut.
             </p>
           </div>
 
           {success ? (
-            <div className="mt-12 border border-[#cfc9be] bg-white/50 p-7 md:mt-16 md:p-10">
+            <div className="mt-12 border border-[#cfc9be] bg-white/60 p-7 md:mt-16 md:p-10">
               <Check size={30} aria-hidden="true" />
-              <h2 className="mt-5 font-display text-3xl text-[#171715] md:text-4xl">Terima kasih.</h2>
+              <h2 className="mt-5 font-display text-3xl text-[#171715] md:text-4xl">Konsultasi sudah tercatat.</h2>
               <p className="mt-3 max-w-xl text-sm leading-7 text-[#77736c]">
-                Konsultasi Anda sudah tercatat. Jika nomor WhatsApp RUMAH ARSITEK telah dikonfigurasi,
-                Anda akan diarahkan ke WhatsApp dalam beberapa saat.
+                Data Anda sudah masuk ke sistem konsultasi RUMAH ARSITEK. WhatsApp adalah langkah lanjutan, bukan pengganti pencatatan lead.
               </p>
-              <a href="/" className="mt-7 inline-flex min-h-12 items-center border border-[#171715] px-6 text-xs font-bold uppercase tracking-[0.18em]">
-                Kembali ke beranda
-              </a>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                {whatsappUrl && (
+                  <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#24563b] px-6 text-xs font-bold uppercase tracking-[0.18em] text-white">
+                    Lanjut ke WhatsApp
+                  </a>
+                )}
+                <a href="/" className="inline-flex min-h-12 items-center justify-center border border-[#171715] px-6 text-xs font-bold uppercase tracking-[0.18em]">
+                  Kembali ke beranda
+                </a>
+              </div>
             </div>
           ) : (
             <form onSubmit={submitForm} className="mt-10 grid gap-8 md:mt-14">
@@ -140,7 +156,7 @@ export default function ContactPage() {
                 <button type="submit" disabled={loading} className="inline-flex min-h-14 items-center justify-center gap-3 bg-[#171715] px-8 text-xs font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#24563b] disabled:cursor-not-allowed disabled:opacity-50">
                   {loading ? "Mengirim..." : "Kirim konsultasi"}
                 </button>
-                <p className="max-w-md text-xs leading-5 text-[#77736c]">Data Anda digunakan untuk menindaklanjuti permintaan konsultasi. Setelah berhasil dikirim, Anda dapat melanjutkan percakapan melalui WhatsApp.</p>
+                <p className="max-w-md text-xs leading-5 text-[#77736c]">Lead disimpan terlebih dahulu. Setelah berhasil, Anda dapat memilih melanjutkan percakapan melalui WhatsApp.</p>
               </div>
             </form>
           )}
