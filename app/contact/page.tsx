@@ -1,14 +1,54 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Check, MessageCircle } from "lucide-react";
 import Turnstile from "@/components/Turnstile";
+import { ESTIMATOR_LEAD_CONTEXT_KEY } from "@/components/ArchitectureEstimator";
+
+type EstimatorLeadContext = {
+  projectType: string;
+  designLevel: string;
+  area: number;
+  estimatedMin: number;
+  estimatedMax: number;
+};
+
+function formatRupiah(value: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [projectType, setProjectType] = useState("");
+  const [estimatorContext, setEstimatorContext] = useState<EstimatorLeadContext | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(ESTIMATOR_LEAD_CONTEXT_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as EstimatorLeadContext;
+      if (
+        typeof parsed?.projectType === "string" &&
+        typeof parsed?.designLevel === "string" &&
+        Number.isFinite(Number(parsed?.area)) &&
+        Number.isFinite(Number(parsed?.estimatedMin)) &&
+        Number.isFinite(Number(parsed?.estimatedMax))
+      ) {
+        setEstimatorContext(parsed);
+        setProjectType(parsed.projectType);
+      }
+    } catch (error) {
+      console.error("[CONTACT ESTIMATOR CONTEXT]", error);
+      sessionStorage.removeItem(ESTIMATOR_LEAD_CONTEXT_KEY);
+    }
+  }, []);
 
   async function submitForm(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -19,7 +59,7 @@ export default function ContactPage() {
     const name = String(data.get("name") || "").trim();
     const phone = String(data.get("phone") || "").trim();
     const email = String(data.get("email") || "").trim();
-    const projectType = String(data.get("projectType") || "").trim();
+    const selectedProjectType = String(data.get("projectType") || projectType).trim();
     const budget = String(data.get("budget") || "").trim();
     const message = String(data.get("message") || "").trim();
     const turnstileToken = String(data.get("cf-turnstile-response") || "");
@@ -28,7 +68,16 @@ export default function ContactPage() {
       const response = await fetch("/api/leads/intake", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, projectType, budget, message, turnstileToken }),
+        body: JSON.stringify({
+          name,
+          phone,
+          email,
+          projectType: selectedProjectType,
+          budget,
+          message,
+          turnstileToken,
+          estimatorContext,
+        }),
       });
       const result = await response.json();
       if (!response.ok) {
@@ -44,15 +93,21 @@ export default function ContactPage() {
           `Nama: ${name}`,
           `WhatsApp: ${phone}`,
           `Email: ${email || "-"}`,
-          `Jenis proyek: ${projectType || "-"}`,
+          `Jenis proyek: ${selectedProjectType || "-"}`,
           `Budget: ${budget || "-"}`,
+          estimatorContext
+            ? `Estimator: ${estimatorContext.area} m² · ${estimatorContext.designLevel} · ${formatRupiah(estimatorContext.estimatedMin)} – ${formatRupiah(estimatorContext.estimatedMax)}`
+            : "",
           "",
           `Detail proyek: ${message || "-"}`,
-        ].join("\n");
+        ].filter(Boolean).join("\n");
         setWhatsappUrl(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`);
       }
       setSuccess(true);
+      sessionStorage.removeItem(ESTIMATOR_LEAD_CONTEXT_KEY);
+      setEstimatorContext(null);
       form.reset();
+      setProjectType("");
     } catch (err) {
       console.error("[CONTACT FORM ERROR]", err);
       setError("Tidak dapat mengirim formulir. Periksa koneksi Anda lalu coba lagi.");
@@ -72,6 +127,18 @@ export default function ContactPage() {
             <p className="mt-7 max-w-2xl text-base leading-7 text-[#77736c] md:text-lg">Ceritakan kebutuhan, jenis proyek, dan gambaran anggaran Anda. Informasi ini disimpan sebagai lead konsultasi agar tim dapat memahami kebutuhan Anda sebelum tindak lanjut.</p>
           </div>
 
+          {estimatorContext && !success && (
+            <div className="mt-8 border border-[#cfc9be] bg-white/70 p-5 md:mt-10 md:p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#24563b]">Estimasi Anda</p>
+              <div className="mt-3 grid gap-3 text-sm md:grid-cols-3">
+                <div><span className="text-[#77736c]">Proyek</span><p className="font-semibold text-[#171715]">{estimatorContext.projectType}</p></div>
+                <div><span className="text-[#77736c]">Paket · Luas</span><p className="font-semibold text-[#171715]">{estimatorContext.designLevel} · {estimatorContext.area} m²</p></div>
+                <div><span className="text-[#77736c]">Rentang estimasi</span><p className="font-semibold text-[#171715]">{formatRupiah(estimatorContext.estimatedMin)} – {formatRupiah(estimatorContext.estimatedMax)}</p></div>
+              </div>
+              <p className="mt-4 text-xs leading-5 text-[#77736c]">Data estimasi ini akan ikut tercatat pada lead konsultasi. Anda tetap dapat menyesuaikan detail proyek di bawah.</p>
+            </div>
+          )}
+
           {success ? (
             <div className="mt-12 border border-[#cfc9be] bg-white/60 p-7 md:mt-16 md:p-10">
               <Check size={30} aria-hidden="true" />
@@ -86,11 +153,11 @@ export default function ContactPage() {
             <form onSubmit={submitForm} className="mt-10 grid gap-8 md:mt-14">
               <div className="grid gap-8 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[#343731]">Nama lengkap<input name="name" required autoComplete="name" placeholder="Nama Anda" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
-                <label className="grid gap-2 text-sm font-semibold text-[#343731]">WhatsApp / Telepon<input name="phone" required autoComplete="tel" inputMode="tel" placeholder="08xxxxxxxxxx" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d]" /></label>
+                <label className="grid gap-2 text-sm font-semibold text-[#343731]">WhatsApp / Telepon<input name="phone" required autoComplete="tel" inputMode="tel" placeholder="08xxxxxxxxxx" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
               </div>
               <div className="grid gap-8 md:grid-cols-2">
                 <label className="grid gap-2 text-sm font-semibold text-[#343731]">Email<input name="email" type="email" autoComplete="email" placeholder="nama@email.com" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
-                <label className="grid gap-2 text-sm font-semibold text-[#343731]">Jenis proyek<select name="projectType" required defaultValue="" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none focus:border-[#24563b]"><option value="" disabled>Pilih jenis proyek</option><option>Rumah baru</option><option>Renovasi</option><option>Interior</option><option>Komersial</option><option>Lainnya</option></select></label>
+                <label className="grid gap-2 text-sm font-semibold text-[#343731]">Jenis proyek<select name="projectType" required value={projectType} onChange={(event) => setProjectType(event.target.value)} className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none focus:border-[#24563b]"><option value="" disabled>Pilih jenis proyek</option><option>Rumah baru</option><option>Renovasi</option><option>Interior</option><option>Komersial</option><option>Villa</option><option>Commercial</option><option>Lainnya</option></select></label>
               </div>
               <label className="grid gap-2 text-sm font-semibold text-[#343731]">Perkiraan anggaran<select name="budget" defaultValue="" className="min-h-14 border-b border-[#cfc9be] bg-transparent px-0 py-3 outline-none focus:border-[#24563b]"><option value="" disabled>Pilih kisaran anggaran</option><option>Di bawah Rp 500 juta</option><option>Rp 500 juta – Rp 1 miliar</option><option>Rp 1 – 2 miliar</option><option>Rp 2 – 5 miliar</option><option>Di atas Rp 5 miliar</option></select></label>
               <label className="grid gap-2 text-sm font-semibold text-[#343731]">Ceritakan proyek Anda<textarea name="message" rows={6} placeholder="Contoh: luas tanah, lokasi, kebutuhan ruang, gaya yang disukai, target waktu, atau hal lain yang penting bagi Anda." className="resize-y border border-[#cfc9be] bg-white/40 p-4 font-normal outline-none transition-colors placeholder:text-[#9a968d] focus:border-[#24563b]" /></label>
