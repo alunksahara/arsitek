@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase-server";
+import { getPublishedLocations } from "@/lib/public-content";
+import { getPortfolioLocationLabel, resolvePortfolioRelations } from "@/lib/portfolio";
 
 export const revalidate = 60;
 
@@ -44,7 +46,10 @@ async function getProjects(): Promise<Project[]> {
 }
 
 export default async function ProjectsPage() {
-  const projects = await getProjects();
+  const [projects, locations] = await Promise.all([
+    getProjects(),
+    getPublishedLocations(),
+  ]);
 
   return (
     <main className="min-h-screen bg-[#fbfaf6] text-[#25342b]">
@@ -71,7 +76,7 @@ export default async function ProjectsPage() {
         </div>
       </section>
 
-      <section className="mx-auto w-[min(1180px,calc(100%-32px))] py-16 sm:py-24">
+      <section id="projects" className="mx-auto w-[min(1180px,calc(100%-32px))] py-16 sm:py-24">
         <div className="mb-10 max-w-2xl">
           <p className="text-xs font-black uppercase tracking-[.16em] text-[#2f6b4a]">Portfolio terpilih</p>
           <h2 className="mt-3 font-serif text-4xl font-normal tracking-[-.035em] sm:text-5xl">Ruang yang lahir dari kebutuhan yang berbeda.</h2>
@@ -83,28 +88,49 @@ export default async function ProjectsPage() {
           </div>
         ) : (
           <div className="grid gap-7 md:grid-cols-2">
-            {projects.map((project) => (
-              <article key={project.id} className="group overflow-hidden rounded-[30px] border border-[#d8e0d9] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-                <div className="overflow-hidden p-2">
-                  <img
-                    src={project.image_url}
-                    alt={project.title}
-                    loading="lazy"
-                    className="h-[300px] w-full rounded-[23px] object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[390px]"
-                  />
-                </div>
-                <div className="p-7 sm:p-8">
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-black uppercase tracking-[.14em] text-[#2f6b4a]">
-                    {project.category && <span>{project.category}</span>}
-                    {project.location && <span className="text-[#6a766f]">· {project.location}</span>}
+            {projects.map((project) => {
+              const relation = resolvePortfolioRelations(project, locations);
+              const locationLabel = getPortfolioLocationLabel(project, relation.location);
+
+              return (
+                <article key={project.id} className="group overflow-hidden rounded-[30px] border border-[#d8e0d9] bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                  <Link href={`/projects/${project.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-[#2f6b4a] focus:ring-offset-2">
+                    <div className="overflow-hidden p-2">
+                      <img
+                        src={project.image_url}
+                        alt={project.title}
+                        loading="lazy"
+                        className="h-[300px] w-full rounded-[23px] object-cover transition duration-500 group-hover:scale-[1.02] sm:h-[390px]"
+                      />
+                    </div>
+                    <div className="p-7 pb-4 sm:p-8 sm:pb-5">
+                      <h2 className="font-serif text-3xl font-normal tracking-[-.03em]">{project.title}</h2>
+                      {project.description && (
+                        <p className="mt-3 text-sm leading-7 text-[#3f4c44]">{project.description}</p>
+                      )}
+                    </div>
+                  </Link>
+
+                  <div className="flex flex-wrap items-center gap-2 px-7 pb-7 text-xs font-black uppercase tracking-[.14em] sm:px-8 sm:pb-8">
+                    {relation.service ? (
+                      <Link href={`/services#${relation.service.slug}`} className="text-[#2f6b4a] hover:underline">
+                        {relation.service.label}
+                      </Link>
+                    ) : project.category ? (
+                      <span className="text-[#2f6b4a]">{project.category}</span>
+                    ) : null}
+                    {locationLabel && <span className="text-[#6a766f]">·</span>}
+                    {relation.location ? (
+                      <Link href={`/lokasi/${relation.location.slug}`} className="text-[#6a766f] hover:text-[#2f6b4a] hover:underline">
+                        {locationLabel}
+                      </Link>
+                    ) : locationLabel ? (
+                      <span className="text-[#6a766f]">{locationLabel}</span>
+                    ) : null}
                   </div>
-                  <h2 className="mt-3 font-serif text-3xl font-normal tracking-[-.03em]">{project.title}</h2>
-                  {project.description && (
-                    <p className="mt-3 text-sm leading-7 text-[#3f4c44]">{project.description}</p>
-                  )}
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         )}
       </section>
