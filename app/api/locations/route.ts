@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { findService } from "@/lib/services";
 import { requireAdmin, requireStaff } from "@/lib/admin";
 import { createAdminSupabase } from "@/lib/supabase-admin";
 
@@ -8,6 +9,14 @@ const jsonError = (message: string, status: number) =>
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function normalizeLocation(input: any) {
+  const services = Array.isArray(input.services)
+    ? input.services
+        .map((item: unknown) => String(item).trim())
+        .filter(Boolean)
+        .map((item: string) => findService(item)?.label || item)
+        .filter((item: string, index: number, all: string[]) => all.indexOf(item) === index)
+    : [];
+
   return {
     city: String(input.city || "").trim(),
     slug: String(input.slug || "").trim().toLowerCase(),
@@ -17,11 +26,7 @@ function normalizeLocation(input: any) {
     h1: String(input.h1 || "").trim(),
     intro: String(input.intro || "").trim(),
     local_context: String(input.local_context || "").trim(),
-    services: Array.isArray(input.services)
-      ? input.services
-          .map((item: unknown) => String(item).trim())
-          .filter(Boolean)
-      : [],
+    services,
     process: Array.isArray(input.process)
       ? input.process
           .map((item: unknown) => String(item).trim())
