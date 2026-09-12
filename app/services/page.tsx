@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Layanan Desain Rumah, Renovasi, Interior & Ruang Usaha",
+  description: "RUMAH ARSITEK membantu memulai proyek rumah baru, renovasi, interior, dan ruang usaha dari kebutuhan hingga menemukan solusi profesional yang sesuai.",
+  alternates: { canonical: "/services" },
+};
 
 const items = [
   ["01", "Rumah baru", "Mulai dari lahan dan kebutuhan keluarga hingga arah desain dan perencanaan."],
