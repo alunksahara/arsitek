@@ -36,6 +36,23 @@ const money = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
+const SAME_KEYS: (keyof Settings)[] = [
+  "essential_rate",
+  "signature_rate",
+  "premium_rate",
+  "rumah_baru_multiplier",
+  "renovasi_multiplier",
+  "villa_multiplier",
+  "commercial_multiplier",
+  "min_range_multiplier",
+  "max_range_multiplier",
+  "min_area",
+];
+
+function sameSettings(a: Settings, b: Settings) {
+  return SAME_KEYS.every((key) => Number(a[key]) === Number(b[key]));
+}
+
 export default function EstimatorAdminPanel() {
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
@@ -78,12 +95,30 @@ export default function EstimatorAdminPanel() {
       const response = await fetch("/api/admin/estimator", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        cache: "no-store",
         body: JSON.stringify(settings),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal menyimpan konfigurasi estimator.");
-      setSettings({ ...DEFAULTS, ...(data.settings || {}) });
-      setMessage("Konfigurasi tersimpan. Estimator publik sekarang memakai nilai yang sama.");
+
+      const saved = { ...DEFAULTS, ...(data.settings || {}) } as Settings;
+      setSettings(saved);
+
+      const verifyResponse = await fetch(`/api/estimator?verify=${Date.now()}`, {
+        method: "GET",
+        cache: "no-store",
+      });
+      const verifyData = await verifyResponse.json();
+      if (!verifyResponse.ok) {
+        throw new Error("Konfigurasi tersimpan, tetapi verifikasi estimator publik gagal.");
+      }
+
+      const publicSettings = { ...DEFAULTS, ...(verifyData.settings || {}) } as Settings;
+      if (!sameSettings(saved, publicSettings)) {
+        throw new Error("Peringatan: data Admin tersimpan, tetapi estimator publik masih membaca konfigurasi berbeda.");
+      }
+
+      setMessage("Konfigurasi tersimpan dan sudah terverifikasi di estimator publik.");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Gagal menyimpan konfigurasi estimator.");
     } finally {
@@ -128,12 +163,7 @@ export default function EstimatorAdminPanel() {
               Nilai di halaman ini disimpan ke Supabase. Tidak lagi bergantung pada localStorage browser, sehingga konfigurasi admin dan estimator publik menggunakan sumber data yang sama.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={load}
-            disabled={loading || saving}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c4bb] bg-white px-4 py-2.5 text-sm font-semibold text-[#252525] hover:bg-[#faf9f6] disabled:opacity-50"
-          >
+          <button type="button" onClick={load} disabled={loading || saving} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c4bb] bg-white px-4 py-2.5 text-sm font-semibold text-[#252525] hover:bg-[#faf9f6] disabled:opacity-50">
             <RefreshCw size={15} /> Muat ulang
           </button>
         </div>
@@ -151,13 +181,7 @@ export default function EstimatorAdminPanel() {
               {rateFields.map(([key, label]) => (
                 <label key={key} className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4">
                   <span className="text-xs font-semibold text-[#454545]">{label}</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={settings[key]}
-                    onChange={(event) => update(key, event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]"
-                  />
+                  <input type="number" min="0" value={settings[key]} onChange={(event) => update(key, event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" />
                 </label>
               ))}
             </div>
@@ -169,15 +193,7 @@ export default function EstimatorAdminPanel() {
               {multiplierFields.map(([key, label]) => (
                 <label key={key} className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4">
                   <span className="text-xs font-semibold text-[#454545]">{label}</span>
-                  <input
-                    type="number"
-                    min="0.01"
-                    max="10"
-                    step="0.01"
-                    value={settings[key]}
-                    onChange={(event) => update(key, event.target.value)}
-                    className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]"
-                  />
+                  <input type="number" min="0.01" max="10" step="0.01" value={settings[key]} onChange={(event) => update(key, event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" />
                 </label>
               ))}
             </div>
@@ -208,12 +224,7 @@ export default function EstimatorAdminPanel() {
             <div className="mt-3 text-xl font-bold sm:text-2xl">{money(preview.min)} — {money(preview.max)}</div>
             <p className="mt-2 text-xs leading-5 text-white/90">Preview ini hanya untuk memastikan perubahan tarif dan range masuk akal sebelum disimpan.</p>
           </div>
-          <button
-            type="button"
-            onClick={save}
-            disabled={loading || saving}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#255c45] px-6 py-3 text-sm font-bold text-white hover:bg-[#1d4c39] disabled:opacity-50"
-          >
+          <button type="button" onClick={save} disabled={loading || saving} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#255c45] px-6 py-3 text-sm font-bold text-white hover:bg-[#1d4c39] disabled:opacity-50">
             <Save size={16} /> {saving ? "Menyimpan..." : "Simpan ke Supabase"}
           </button>
         </div>
