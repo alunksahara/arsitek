@@ -47,7 +47,7 @@ export default async function LocationPage({ params }: { params: Promise<{ kota:
             <Link href="/services" className="text-[#3f4c44] hover:text-[#2f6b4a]">Layanan</Link>
             <Link href="/lokasi" className="text-[#2f6b4a]">Lokasi</Link>
             <Link href="/projects" className="hidden text-[#3f4c44] hover:text-[#2f6b4a] sm:inline">Inspirasi</Link>
-            <Link href="/#contact" className="rounded-full bg-[#2f6b4a] px-4 py-2.5 text-white hover:bg-[#173d29]">Konsultasi</Link>
+            <Link href="/contact" className="rounded-full bg-[#2f6b4a] px-4 py-2.5 text-white hover:bg-[#173d29]">Konsultasi</Link>
           </nav>
         </div>
       </header>
@@ -136,7 +136,7 @@ export default async function LocationPage({ params }: { params: Promise<{ kota:
             <p className="text-xs font-black uppercase tracking-[.16em] text-[#765b40]">{location.city}</p>
             <h2 className="mt-2 max-w-2xl font-serif text-3xl font-normal tracking-[-.03em]">Punya rencana ruang di {location.city}? Cerita saja.</h2>
           </div>
-          <Link href="/#contact" className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#2f6b4a] px-6 py-4 text-sm font-black text-white shadow-lg hover:bg-[#173d29]">Ceritakan rencana saya →</Link>
+          <Link href="/contact" className="inline-flex shrink-0 items-center justify-center rounded-full bg-[#2f6b4a] px-6 py-4 text-sm font-black text-white shadow-lg hover:bg-[#173d29]">Ceritakan rencana saya →</Link>
         </div>
       </section>
     </main>
