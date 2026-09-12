@@ -5,6 +5,8 @@ import { ArrowLeft, Check, MessageCircle } from "lucide-react";
 import Turnstile from "@/components/Turnstile";
 import { ESTIMATOR_LEAD_CONTEXT_KEY } from "@/components/ArchitectureEstimator";
 
+const DEFAULT_WHATSAPP_NUMBER = "6285736149999";
+
 type EstimatorLeadContext = {
   projectType: string;
   designLevel: string;
@@ -92,7 +94,10 @@ export default function ContactPage() {
         return;
       }
 
-      const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim();
+      const whatsappNumber = (
+        process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || DEFAULT_WHATSAPP_NUMBER
+      ).replace(/\D/g, "");
+
       if (whatsappNumber) {
         const whatsappMessage = [
           "Halo RUMAH ARSITEK, saya ingin melanjutkan konsultasi mengenai proyek saya.",
