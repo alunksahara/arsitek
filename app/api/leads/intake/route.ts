@@ -28,6 +28,49 @@ function cleanNeeds(value: unknown): string | null {
   return items.length ? items.join(" | ") : null;
 }
 
+function buildEstimatorBrief({
+  projectType,
+  designLevel,
+  area,
+  estimatedMin,
+  estimatedMax,
+  landArea,
+  floors,
+  condition,
+  needs,
+  city,
+  province,
+  timeline,
+}: {
+  projectType: string | null;
+  designLevel: string | null;
+  area: number | null;
+  estimatedMin: number | null;
+  estimatedMax: number | null;
+  landArea: number | null;
+  floors: number | null;
+  condition: string | null;
+  needs: string | null;
+  city: string | null;
+  province: string | null;
+  timeline: string | null;
+}) {
+  const lines = [
+    "PROJECT BRIEF DARI ESTIMATOR",
+    `Jenis proyek: ${projectType || "-"}`,
+    `Paket desain: ${designLevel || "-"}`,
+    `Luas bangunan: ${area !== null ? `${area} m²` : "-"}`,
+    `Luas tanah: ${landArea !== null ? `${landArea} m²` : "-"}`,
+    `Jumlah lantai: ${floors !== null ? floors : "-"}`,
+    `Kondisi: ${condition || "-"}`,
+    `Kebutuhan: ${needs || "-"}`,
+    `Lokasi: ${city || "-"}${province ? `, ${province}` : ""}`,
+    `Target waktu: ${timeline || "-"}`,
+    `Estimasi investasi desain: ${estimatedMin !== null && estimatedMax !== null ? `Rp ${new Intl.NumberFormat("id-ID").format(estimatedMin)} – Rp ${new Intl.NumberFormat("id-ID").format(estimatedMax)}` : "-"}`,
+  ];
+  return lines.join("\n");
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -82,6 +125,27 @@ export async function POST(request: Request) {
     }
 
     const supabase = createAdminSupabase();
+    const estimatorBrief =
+      estimatorProjectType || estimatorDesignLevel || estimatorArea !== null
+        ? buildEstimatorBrief({
+            projectType: estimatorProjectType,
+            designLevel: estimatorDesignLevel,
+            area: estimatorArea,
+            estimatedMin: estimatorEstimatedMin,
+            estimatedMax: estimatorEstimatedMax,
+            landArea: estimatorLandArea,
+            floors: estimatorFloors,
+            condition: estimatorCondition,
+            needs: estimatorNeeds,
+            city: estimatorCity,
+            province: estimatorProvince,
+            timeline: estimatorTimeline,
+          })
+        : null;
+    const storedMessage = estimatorBrief
+      ? `${estimatorBrief}\n\nCATATAN CALON KLIEN\n${message || "-"}`
+      : message || null;
+
     const { data, error } = await supabase
       .from("leads")
       .insert({
@@ -90,7 +154,7 @@ export async function POST(request: Request) {
         email: email || null,
         project_type: projectType,
         budget: budget || null,
-        message: message || null,
+        message: storedMessage,
         estimator_project_type: estimatorProjectType,
         estimator_design_level: estimatorDesignLevel,
         estimator_area: estimatorArea,
