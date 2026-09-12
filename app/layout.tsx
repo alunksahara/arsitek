@@ -4,7 +4,9 @@ import "./globals.css";
 import FloatingNavigation from "@/components/FloatingNavigation";
 import Footer from "@/components/Footer";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const siteUrl = (
+  process.env.NEXT_PUBLIC_SITE_URL || "https://arsitek-rose.vercel.app"
+).replace(/\/$/, "");
 const siteName = "RUMAH ARSITEK";
 const siteDescription =
   "RUMAH ARSITEK membantu Anda memulai kebutuhan desain rumah, renovasi, interior, hingga ruang komersial, lalu menemukan solusi profesional yang sesuai.";
