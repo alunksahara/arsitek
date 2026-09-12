@@ -64,6 +64,12 @@ function normalize(body: Record<string, unknown>) {
 }
 
 export async function GET() {
+  const { authorized } = await requireAdmin();
+
+  if (!authorized) {
+    return jsonError("Unauthorized", 401);
+  }
+
   try {
     const supabase = createAdminSupabase();
     const { data, error } = await supabase
