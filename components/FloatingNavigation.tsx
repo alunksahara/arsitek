@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function FloatingNavigation() {
   const [showTop, setShowTop] = useState(false);
-  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim().replace(/\D/g, "");
-  const whatsappMessage = encodeURIComponent(
+  const whatsappUrl = buildWhatsAppUrl(
     "Halo RUMAH ARSITEK, saya ingin berkonsultasi mengenai rencana proyek saya."
   );
 
@@ -20,19 +20,17 @@ export default function FloatingNavigation() {
 
   return (
     <div className="fixed bottom-5 right-4 z-[60] flex items-center gap-2 sm:bottom-6 sm:right-6">
-      {whatsappNumber && (
-        <a
-          href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex h-11 items-center gap-2 rounded-full bg-[#24563b] px-4 text-xs font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#173d29]"
-          aria-label="Chat WhatsApp dengan RUMAH ARSITEK"
-        >
-          <MessageCircle size={16} aria-hidden="true" />
-          <span className="hidden sm:inline">Chat WhatsApp</span>
-          <span className="sm:hidden">WhatsApp</span>
-        </a>
-      )}
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="inline-flex h-11 items-center gap-2 rounded-full bg-[#24563b] px-4 text-xs font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#173d29]"
+        aria-label="Chat WhatsApp dengan RUMAH ARSITEK"
+      >
+        <MessageCircle size={16} aria-hidden="true" />
+        <span className="hidden sm:inline">Chat WhatsApp</span>
+        <span className="sm:hidden">WhatsApp</span>
+      </a>
       {showTop && (
         <button
           type="button"
