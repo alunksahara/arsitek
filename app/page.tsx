@@ -1,72 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ArchitectureEstimator from "@/components/ArchitectureEstimator";
 
-const whatsappMessage = encodeURIComponent(
-  "Halo RUMAH ARSITEK, saya ingin menceritakan rencana ruang/proyek saya."
-);
-
 const stories = [
-  {
-    no: "01",
-    title: "Saya ingin membangun rumah",
-    short: "Dari lahan sampai rumah yang terasa seperti milik sendiri.",
-    text: "Mulai dari kondisi lahan, jumlah anggota keluarga, kebiasaan sehari-hari, kebutuhan ruang, pencahayaan, sirkulasi, sampai suasana rumah yang Anda inginkan.",
-    image:
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=88",
-    tone: "bg-[#eaf3e9]",
-  },
-  {
-    no: "02",
-    title: "Rumah saya ingin direnovasi",
-    short: "Ruang lama bisa berubah mengikuti kehidupan yang baru.",
-    text: "Ruang terasa sempit, kurang terang, tata letaknya tidak lagi cocok, atau kebutuhan keluarga sudah berubah? Renovasi yang baik dimulai dari memahami masalah sebelum menentukan apa yang perlu diubah.",
-    image:
-      "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=88",
-    tone: "bg-[#fff1df]",
-  },
-  {
-    no: "03",
-    title: "Saya ingin menata interior",
-    short: "Membuat ruang lebih nyaman tanpa kehilangan karakter.",
-    text: "Tidak harus tahu nama gaya desain. Ceritakan saja bagaimana ruang digunakan, apa yang terasa kurang, warna yang disukai, kebutuhan penyimpanan, dan suasana yang ingin dibangun.",
-    image:
-      "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=88",
-    tone: "bg-[#edf2f7]",
-  },
-  {
-    no: "04",
-    title: "Saya punya ruang usaha",
-    short: "Ruang yang bukan hanya menarik, tetapi membantu usaha bekerja.",
-    text: "Café, toko, kantor, kos, villa, guest house, studio, atau ruang komersial lain membutuhkan pertimbangan yang berbeda. Alur pengguna, kapasitas, identitas usaha, fungsi ruang, dan biaya perlu dipikirkan bersama.",
-    image:
-      "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1200&q=88",
-    tone: "bg-[#f6e9ee]",
-  },
+  { no: "01", title: "Saya ingin membangun rumah", short: "Dari lahan sampai rumah yang terasa seperti milik sendiri.", text: "Mulai dari kondisi lahan, jumlah anggota keluarga, kebiasaan sehari-hari, kebutuhan ruang, pencahayaan, sirkulasi, sampai suasana rumah yang Anda inginkan.", image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=88", tone: "bg-[#eaf3e9]" },
+  { no: "02", title: "Rumah saya ingin direnovasi", short: "Ruang lama bisa berubah mengikuti kehidupan yang baru.", text: "Ruang terasa sempit, kurang terang, tata letaknya tidak lagi cocok, atau kebutuhan keluarga sudah berubah? Renovasi yang baik dimulai dari memahami masalah sebelum menentukan apa yang perlu diubah.", image: "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=88", tone: "bg-[#fff1df]" },
+  { no: "03", title: "Saya ingin menata interior", short: "Membuat ruang lebih nyaman tanpa kehilangan karakter.", text: "Tidak harus tahu nama gaya desain. Ceritakan saja bagaimana ruang digunakan, apa yang terasa kurang, warna yang disukai, kebutuhan penyimpanan, dan suasana yang ingin dibangun.", image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=88", tone: "bg-[#edf2f7]" },
+  { no: "04", title: "Saya punya ruang usaha", short: "Ruang yang bukan hanya menarik, tetapi membantu usaha bekerja.", text: "Café, toko, kantor, kos, villa, guest house, studio, atau ruang komersial lain membutuhkan pertimbangan yang berbeda. Alur pengguna, kapasitas, identitas usaha, fungsi ruang, dan biaya perlu dipikirkan bersama.", image: "https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1200&q=88", tone: "bg-[#f6e9ee]" },
 ];
 
 const faqs = [
-  [
-    "Saya belum punya desain. Bisa mulai?",
-    "Bisa. Justru percakapan pertama dapat dimulai dari kebutuhan, kondisi ruang, dan keinginan Anda. Desain dan langkah teknis dibicarakan setelah arahnya lebih jelas.",
-  ],
-  [
-    "Saya belum tahu harus mencari arsitek atau interior designer?",
-    "Tidak masalah. Anda tidak harus menentukan istilah layanan sejak awal. Ceritakan proyeknya terlebih dahulu, lalu kebutuhan dapat dipetakan sebelum diarahkan kepada tenaga profesional yang sesuai.",
-  ],
-  [
-    "Saya belum tahu budget. Bagaimana?",
-    "Tidak masalah. Estimator dapat memberikan gambaran awal. Setelah kebutuhan lebih jelas, partner profesional dapat membantu membuat pembahasan biaya yang lebih sesuai kondisi proyek.",
-  ],
-  [
-    "Apakah hanya melayani Kediri?",
-    "Kediri adalah titik awal. RUMAH ARSITEK disiapkan untuk berkembang melalui jaringan partner profesional di berbagai wilayah Indonesia. Karena itu, kebutuhan lokal dapat dilayani tanpa membuat brand terbatas pada satu kota.",
-  ],
-  [
-    "Siapa yang mengerjakan proyek saya?",
-    "RUMAH ARSITEK membantu mempertemukan kebutuhan Anda dengan tenaga profesional atau partner yang sesuai. Kami tidak mengharuskan setiap proyek ditangani oleh satu tim internal tertentu.",
-  ],
+  ["Saya belum punya desain. Bisa mulai?", "Bisa. Justru percakapan pertama dapat dimulai dari kebutuhan, kondisi ruang, dan keinginan Anda. Desain dan langkah teknis dibicarakan setelah arahnya lebih jelas."],
+  ["Saya belum tahu harus mencari arsitek atau interior designer?", "Tidak masalah. Anda tidak harus menentukan istilah layanan sejak awal. Ceritakan proyeknya terlebih dahulu, lalu kebutuhan dapat dipetakan sebelum diarahkan kepada tenaga profesional yang sesuai."],
+  ["Saya belum tahu budget. Bagaimana?", "Tidak masalah. Estimator dapat memberikan gambaran awal. Setelah kebutuhan lebih jelas, partner profesional dapat membantu membuat pembahasan biaya yang lebih sesuai kondisi proyek."],
+  ["Apakah hanya melayani Kediri?", "Kediri adalah titik awal. RUMAH ARSITEK disiapkan untuk berkembang melalui jaringan partner profesional di berbagai wilayah Indonesia. Karena itu, kebutuhan lokal dapat dilayani tanpa membuat brand terbatas pada satu kota."],
+  ["Siapa yang mengerjakan proyek saya?", "RUMAH ARSITEK membantu mempertemukan kebutuhan Anda dengan tenaga profesional atau partner yang sesuai. Kami tidak mengharuskan setiap proyek ditangani oleh satu tim internal tertentu."],
 ];
 
 const topics = [
@@ -82,157 +31,43 @@ export default function HomePage() {
   const [menu, setMenu] = useState(false);
   const [faqOpen, setFaqOpen] = useState<number | null>(null);
   const [activeStory, setActiveStory] = useState(0);
-  const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "6281234567890";
-  const wa = useMemo(
-    () => `https://wa.me/${number}?text=${whatsappMessage}`,
-    [number]
-  );
+  const leadUrl = "/contact";
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#fbfaf6] text-[#25342b] selection:bg-[#cfe4d1] selection:text-[#183624]">
       <header className="sticky top-0 z-50 border-b border-[#e6e9e3]/80 bg-[#fbfaf6]/94 backdrop-blur-xl">
         <div className="mx-auto flex min-h-[74px] w-[min(1180px,calc(100%-32px))] items-center justify-between">
-          <a href="/" className="group flex items-center gap-3" aria-label="RUMAH ARSITEK beranda">
-            <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-[#2f6b4a] text-base font-black text-white transition group-hover:rotate-3">RA</span>
-            <span className="text-[13px] font-black tracking-[.12em]">RUMAH ARSITEK</span>
-          </a>
-          <nav className="hidden items-center gap-7 md:flex" aria-label="Navigasi utama">
-            <a href="#cerita" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Kebutuhan</a>
-            <a href="#perjalanan" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Cara mulai</a>
-            <a href="/projects" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Inspirasi</a>
-            <a href="#estimasi" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Estimasi</a>
-            <a href="#faq" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">FAQ</a>
-          </nav>
-          <a href={wa} target="_blank" rel="noreferrer" className="hidden rounded-full bg-[#2f6b4a] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#255a3e] sm:block">Ceritakan rencana ↗</a>
+          <a href="/" className="group flex items-center gap-3" aria-label="RUMAH ARSITEK beranda"><span className="grid h-10 w-10 place-items-center rounded-[14px] bg-[#2f6b4a] text-base font-black text-white transition group-hover:rotate-3">RA</span><span className="text-[13px] font-black tracking-[.12em]">RUMAH ARSITEK</span></a>
+          <nav className="hidden items-center gap-7 md:flex" aria-label="Navigasi utama"><a href="#cerita" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Kebutuhan</a><a href="#perjalanan" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Cara mulai</a><a href="/projects" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Inspirasi</a><a href="#estimasi" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">Estimasi</a><a href="#faq" className="text-sm font-semibold text-[#69746d] transition hover:text-[#2f6b4a]">FAQ</a></nav>
+          <a href={leadUrl} className="hidden rounded-full bg-[#2f6b4a] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#255a3e] sm:block">Ceritakan rencana ↗</a>
           <button onClick={() => setMenu(!menu)} aria-label="Buka menu" className="rounded-full border border-[#d9dfd8] px-3 py-2 text-xl text-[#2f6b4a] md:hidden">{menu ? "×" : "☰"}</button>
         </div>
-        {menu && (
-          <div className="border-t border-[#e6e9e3] bg-[#fbfaf6] px-4 md:hidden">
-            {[["#cerita", "Kebutuhan"], ["#perjalanan", "Cara mulai"], ["/projects", "Inspirasi proyek"], ["#estimasi", "Estimasi"], ["#faq", "FAQ"], ["#contact", "Konsultasi"]].map(([href, label]) => (
-              <a key={label} href={href} onClick={() => setMenu(false)} className="block border-b border-[#e8ebe6] py-4 text-sm font-bold">{label}</a>
-            ))}
-          </div>
-        )}
+        {menu && <div className="border-t border-[#e6e9e3] bg-[#fbfaf6] px-4 md:hidden">{[["#cerita", "Kebutuhan"], ["#perjalanan", "Cara mulai"], ["/projects", "Inspirasi proyek"], ["#estimasi", "Estimasi"], ["#faq", "FAQ"], ["/contact", "Konsultasi"]].map(([href, label]) => <a key={label} href={href} onClick={() => setMenu(false)} className="block border-b border-[#e8ebe6] py-4 text-sm font-bold">{label}</a>)}</div>}
       </header>
 
-      <section className="relative overflow-hidden bg-[#eaf3e9]">
-        <div className="absolute -left-36 top-16 h-[360px] w-[360px] rounded-full bg-white/80 blur-3xl" />
-        <div className="absolute right-[-120px] bottom-[-100px] h-[430px] w-[430px] rounded-full bg-[#cfe5d1]/70 blur-3xl" />
-        <div className="relative mx-auto grid min-h-[700px] w-[min(1180px,calc(100%-32px))] items-center gap-10 py-12 lg:grid-cols-[.86fr_1.14fr] lg:py-16">
-          <div className="relative z-10">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-xs font-bold text-[#3b6e4d] shadow-sm ring-1 ring-[#d8e6d9]"><span className="h-2 w-2 rounded-full bg-[#70a77d]" /> Tidak harus tahu harus mulai dari mana</div>
-            <h1 className="max-w-[650px] text-[clamp(50px,7vw,88px)] font-black leading-[.92] tracking-[-.065em] text-[#20372a]">Punya ruang yang ingin <span className="text-[#43815a]">diwujudkan?</span></h1>
-            <p className="mt-7 max-w-xl text-lg font-medium leading-8 text-[#526158] sm:text-xl">Tidak perlu datang dengan gambar. Tidak perlu mengerti istilah arsitektur. <strong className="font-black text-[#30483a]">Mulai saja dari ceritanya.</strong></p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href={wa} target="_blank" rel="noreferrer" className="rounded-full bg-[#2f6b4a] px-7 py-4 text-sm font-black text-white shadow-xl shadow-[#2f6b4a]/15 transition hover:-translate-y-1">Ceritakan rencana saya →</a>
-              <a href="#cerita" className="rounded-full bg-white px-7 py-4 text-sm font-black text-[#2f6b4a] shadow-sm ring-1 ring-[#d8e4d8] transition hover:-translate-y-1">Cari kebutuhan saya</a>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-2 text-xs font-bold text-[#68766d]"><a href="#rumah" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Rumah</a><a href="#renovasi" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Renovasi</a><a href="#interior" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Interior</a><a href="#usaha" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Ruang usaha</a></div>
-            <div className="mt-8 max-w-xl rounded-2xl border border-[#d5e3d5] bg-white/55 px-5 py-4 text-sm leading-6 text-[#5e6c63]">
-              <strong className="text-[#2f6b4a]">RUMAH ARSITEK</strong> membantu Anda memahami kebutuhan ruang, mendapatkan gambaran awal, lalu menemukan jalan menuju partner profesional yang sesuai.
-            </div>
-          </div>
+      <section className="relative overflow-hidden bg-[#eaf3e9]"><div className="absolute -left-36 top-16 h-[360px] w-[360px] rounded-full bg-white/80 blur-3xl" /><div className="absolute right-[-120px] bottom-[-100px] h-[430px] w-[430px] rounded-full bg-[#cfe5d1]/70 blur-3xl" /><div className="relative mx-auto grid min-h-[700px] w-[min(1180px,calc(100%-32px))] items-center gap-10 py-12 lg:grid-cols-[.86fr_1.14fr] lg:py-16">
+        <div className="relative z-10"><div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-xs font-bold text-[#3b6e4d] shadow-sm ring-1 ring-[#d8e6d9]"><span className="h-2 w-2 rounded-full bg-[#70a77d]" /> Tidak harus tahu harus mulai dari mana</div><h1 className="max-w-[650px] text-[clamp(50px,7vw,88px)] font-black leading-[.92] tracking-[-.065em] text-[#20372a]">Punya ruang yang ingin <span className="text-[#43815a]">diwujudkan?</span></h1><p className="mt-7 max-w-xl text-lg font-medium leading-8 text-[#526158] sm:text-xl">Tidak perlu datang dengan gambar. Tidak perlu mengerti istilah arsitektur. <strong className="font-black text-[#30483a]">Mulai saja dari ceritanya.</strong></p><div className="mt-8 flex flex-wrap gap-3"><a href={leadUrl} className="rounded-full bg-[#2f6b4a] px-7 py-4 text-sm font-black text-white shadow-xl shadow-[#2f6b4a]/15 transition hover:-translate-y-1">Ceritakan rencana saya →</a><a href="#cerita" className="rounded-full bg-white px-7 py-4 text-sm font-black text-[#2f6b4a] shadow-sm ring-1 ring-[#d8e4d8] transition hover:-translate-y-1">Cari kebutuhan saya</a></div><div className="mt-8 flex flex-wrap gap-2 text-xs font-bold text-[#68766d]"><a href="#rumah" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Rumah</a><a href="#renovasi" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Renovasi</a><a href="#interior" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Interior</a><a href="#usaha" className="rounded-full bg-white/75 px-3 py-2 hover:bg-white">Ruang usaha</a></div><div className="mt-8 max-w-xl rounded-2xl border border-[#d5e3d5] bg-white/55 px-5 py-4 text-sm leading-6 text-[#5e6c63]"><strong className="text-[#2f6b4a]">RUMAH ARSITEK</strong> membantu Anda memahami kebutuhan ruang, mendapatkan gambaran awal, lalu menemukan jalan menuju partner profesional yang sesuai.</div></div>
+        <div className="relative z-10 mx-auto w-full max-w-[640px]"><div className="relative overflow-hidden rounded-[38px] bg-white p-2 shadow-[0_35px_90px_rgba(43,76,55,.16)]"><img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=90" alt="Interior rumah terang dengan cahaya alami" className="h-[400px] w-full rounded-[31px] object-cover sm:h-[520px]" /><div className="absolute left-6 top-6 max-w-[225px] rounded-2xl bg-white/96 p-4 shadow-xl backdrop-blur"><p className="text-[10px] font-black tracking-[.14em] text-[#728078]">LANGKAH PERTAMA</p><p className="mt-2 text-base font-black leading-5">Bukan gambar. Bukan istilah.</p><p className="mt-1 text-xs font-medium leading-5 text-[#68756d]">Kita mulai dari apa yang Anda butuhkan.</p></div><div className="absolute bottom-6 right-6 max-w-[225px] rounded-2xl bg-[#fff8e9] p-5 shadow-xl"><p className="text-sm font-black text-[#855a28]">Ide dulu.</p><p className="mt-1 text-xs font-semibold leading-5 text-[#8b704e]">Keputusan belakangan.</p></div></div><div className="absolute -bottom-6 -left-4 hidden rotate-[-2deg] rounded-2xl bg-white px-5 py-4 shadow-xl ring-1 ring-black/5 sm:block"><p className="text-[10px] font-black tracking-[.14em] text-[#728078]">CATATAN KECIL</p><p className="mt-1 text-sm font-black text-[#2f6b4a]">“Ingin lebih terang.”</p></div></div>
+      </div></section>
 
-          <div className="relative z-10 mx-auto w-full max-w-[640px]">
-            <div className="relative overflow-hidden rounded-[38px] bg-white p-2 shadow-[0_35px_90px_rgba(43,76,55,.16)]">
-              <img src="https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1600&q=90" alt="Interior rumah terang dengan cahaya alami" className="h-[400px] w-full rounded-[31px] object-cover sm:h-[520px]" />
-              <div className="absolute left-6 top-6 max-w-[225px] rounded-2xl bg-white/96 p-4 shadow-xl backdrop-blur"><p className="text-[10px] font-black tracking-[.14em] text-[#728078]">LANGKAH PERTAMA</p><p className="mt-2 text-base font-black leading-5">Bukan gambar. Bukan istilah.</p><p className="mt-1 text-xs font-medium leading-5 text-[#68756d]">Kita mulai dari apa yang Anda butuhkan.</p></div>
-              <div className="absolute bottom-6 right-6 max-w-[225px] rounded-2xl bg-[#fff8e9] p-5 shadow-xl"><p className="text-sm font-black text-[#855a28]">Ide dulu.</p><p className="mt-1 text-xs font-semibold leading-5 text-[#8b704e]">Keputusan belakangan.</p></div>
-            </div>
-            <div className="absolute -bottom-6 -left-4 hidden rotate-[-2deg] rounded-2xl bg-white px-5 py-4 shadow-xl ring-1 ring-black/5 sm:block"><p className="text-[10px] font-black tracking-[.14em] text-[#728078]">CATATAN KECIL</p><p className="mt-1 text-sm font-black text-[#2f6b4a]">“Ingin lebih terang.”</p></div>
-          </div>
-        </div>
-      </section>
+      <section className="border-y border-[#e6e9e3] bg-white"><div className="mx-auto grid w-[min(1180px,calc(100%-32px))] grid-cols-2 sm:grid-cols-4">{[["01", "Rumah", "Tempat pulang"], ["02", "Renovasi", "Ruang berubah"], ["03", "Interior", "Rasa yang baru"], ["04", "Usaha", "Ruang yang bekerja"]].map(([no, title, text], i) => <a href={`#${["rumah", "renovasi", "interior", "usaha"][i]}`} key={no} className={`px-5 py-6 transition hover:bg-[#f7faf7] sm:px-7 ${i % 2 === 1 ? "border-l border-[#e8ebe6]" : ""} ${i > 1 ? "border-t border-[#e8ebe6] sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}><span className="text-[10px] font-black tracking-[.16em] text-[#78907f]">{no}</span><p className="mt-2 text-xl font-black tracking-[-.02em] text-[#2f6b4a]">{title}</p><p className="mt-1 text-xs font-medium text-[#7a847e]">{text}</p></a>)}</div></section>
 
-      <section className="border-y border-[#e6e9e3] bg-white">
-        <div className="mx-auto grid w-[min(1180px,calc(100%-32px))] grid-cols-2 sm:grid-cols-4">
-          {[["01", "Rumah", "Tempat pulang"], ["02", "Renovasi", "Ruang berubah"], ["03", "Interior", "Rasa yang baru"], ["04", "Usaha", "Ruang yang bekerja"]].map(([no, title, text], i) => (
-            <a href={`#${i === 0 ? "rumah" : i === 1 ? "renovasi" : i === 2 ? "interior" : "usaha"}`} key={no} className={`px-5 py-6 transition hover:bg-[#f7faf7] sm:px-7 ${i % 2 === 1 ? "border-l border-[#e8ebe6]" : ""} ${i > 1 ? "border-t border-[#e8ebe6] sm:border-t-0" : ""} ${i > 0 ? "sm:border-l" : ""}`}>
-              <span className="text-[10px] font-black tracking-[.16em] text-[#78907f]">{no}</span><p className="mt-2 text-xl font-black tracking-[-.02em] text-[#2f6b4a]">{title}</p><p className="mt-1 text-xs font-medium text-[#7a847e]">{text}</p>
-            </a>
-          ))}
-        </div>
-      </section>
+      <section id="cerita" className="bg-[#fbfaf6] py-20 sm:py-28"><div className="mx-auto w-[min(1180px,calc(100%-32px))]"><div className="grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:items-end"><div><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">01 · Mulai dari kebutuhan</span><h2 className="mt-4 max-w-xl text-5xl font-black leading-[.95] tracking-[-.055em] text-[#25342b] sm:text-6xl">Ceritakan ruang yang ada di kepala Anda.</h2></div><p className="max-w-xl text-base font-medium leading-7 text-[#69756e] lg:justify-self-end">Tidak semua orang tahu apakah mereka membutuhkan arsitek, desainer interior, konsultan, atau tenaga profesional lain. Karena itu, kami memakai bahasa kebutuhan lebih dulu. Dari sana, arah proyek menjadi lebih mudah dibicarakan.</p></div><div className="mt-10 grid gap-5 lg:grid-cols-[.78fr_1.22fr]"><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">{stories.map((story, i) => { const id = ["rumah", "renovasi", "interior", "usaha"][i]; return <button id={id} key={story.no} type="button" onClick={() => setActiveStory(i)} className={`group rounded-[22px] border p-5 text-left transition duration-300 sm:p-6 ${activeStory === i ? "border-[#b9d4bd] bg-white shadow-lg" : "border-transparent bg-white/55 hover:bg-white"}`}><div className="flex items-start gap-4"><span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black ${activeStory === i ? "bg-[#2f6b4a] text-white" : "bg-[#e8efe8] text-[#5e7566]"}`}>{story.no}</span><div><h3 className="text-lg font-black text-[#2d3d33]">{story.title}</h3><p className="mt-2 text-sm font-medium leading-6 text-[#707b74]">{story.short}</p><span className="mt-3 inline-block text-xs font-black text-[#2f6b4a]">Lihat kebutuhan →</span></div></div></button>; })}</div><div className={`relative min-h-[500px] overflow-hidden rounded-[32px] ${stories[activeStory].tone}`}><img src={stories[activeStory].image} alt={stories[activeStory].title} className="absolute inset-0 h-full w-full object-cover transition duration-500" /><div className="absolute inset-x-5 bottom-5 rounded-[23px] bg-white/95 p-6 shadow-xl backdrop-blur sm:inset-x-7 sm:bottom-7 sm:p-7"><span className="text-[10px] font-black uppercase tracking-[.18em] text-[#71907a]">Yang ingin diwujudkan</span><h3 className="mt-2 text-2xl font-black leading-tight text-[#25342b]">{stories[activeStory].title}</h3><p className="mt-3 text-sm font-medium leading-6 text-[#647168]">{stories[activeStory].text}</p><a href={leadUrl} className="mt-5 inline-flex rounded-full bg-[#2f6b4a] px-5 py-3 text-xs font-black text-white">Bicarakan kebutuhan ini →</a></div></div></div></div></section>
 
-      <section id="cerita" className="bg-[#fbfaf6] py-20 sm:py-28">
-        <div className="mx-auto w-[min(1180px,calc(100%-32px))]">
-          <div className="grid gap-8 lg:grid-cols-[.75fr_1.25fr] lg:items-end">
-            <div><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">01 · Mulai dari kebutuhan</span><h2 className="mt-4 max-w-xl text-5xl font-black leading-[.95] tracking-[-.055em] text-[#25342b] sm:text-6xl">Ceritakan ruang yang ada di kepala Anda.</h2></div>
-            <p className="max-w-xl text-base font-medium leading-7 text-[#69756e] lg:justify-self-end">Tidak semua orang tahu apakah mereka membutuhkan arsitek, desainer interior, konsultan, atau tenaga profesional lain. Karena itu, kami memakai bahasa kebutuhan lebih dulu. Dari sana, arah proyek menjadi lebih mudah dibicarakan.</p>
-          </div>
+      <section className="bg-white py-20 sm:py-24"><div className="mx-auto w-[min(1180px,calc(100%-32px))]"><div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end"><div><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">Untuk yang masih mencari jawaban</span><h2 className="mt-4 text-4xl font-black leading-[.98] tracking-[-.045em] text-[#25342b] sm:text-5xl">Banyak pertanyaan lebih baik dijawab sebelum proyek dimulai.</h2></div><p className="max-w-xl text-sm font-medium leading-7 text-[#69756e] lg:justify-self-end">Bagian ini sengaja dibuat informatif. Selain membantu Anda memahami pilihan, informasi yang jelas membuat pencarian seperti <strong className="text-[#405047]">desain rumah, jasa arsitek, renovasi rumah, interior, ruang usaha, dan estimasi biaya</strong> punya tempat yang relevan di dalam website.</p></div><div className="mt-10 grid gap-3 md:grid-cols-2 lg:grid-cols-3">{topics.map(([title, text]) => <a href={title === "Estimasi biaya" ? "#estimasi" : "#cerita"} key={title} className="group rounded-[22px] border border-[#e5e9e4] bg-[#fbfaf6] p-6 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><span className="text-[10px] font-black uppercase tracking-[.15em] text-[#73907c]">Panduan singkat</span><h3 className="mt-3 text-xl font-black text-[#304138]">{title}</h3><p className="mt-2 text-sm font-medium leading-6 text-[#707b74]">{text}</p><span className="mt-4 inline-block text-xs font-black text-[#2f6b4a]">Pelajari dari kebutuhan →</span></a>)}</div></div></section>
 
-          <div className="mt-10 grid gap-5 lg:grid-cols-[.78fr_1.22fr]">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-              {stories.map((story, i) => {
-                const id = ["rumah", "renovasi", "interior", "usaha"][i];
-                return <button id={id} key={story.no} type="button" onClick={() => setActiveStory(i)} className={`group rounded-[22px] border p-5 text-left transition duration-300 sm:p-6 ${activeStory === i ? "border-[#b9d4bd] bg-white shadow-lg" : "border-transparent bg-white/55 hover:bg-white"}`}>
-                  <div className="flex items-start gap-4"><span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-xs font-black ${activeStory === i ? "bg-[#2f6b4a] text-white" : "bg-[#e8efe8] text-[#5e7566]"}`}>{story.no}</span><div><h3 className="text-lg font-black text-[#2d3d33]">{story.title}</h3><p className="mt-2 text-sm font-medium leading-6 text-[#707b74]">{story.short}</p><span className="mt-3 inline-block text-xs font-black text-[#2f6b4a]">Lihat kebutuhan →</span></div></div>
-                </button>;
-              })}
-            </div>
-            <div className={`relative min-h-[500px] overflow-hidden rounded-[32px] ${stories[activeStory].tone}`}>
-              <img src={stories[activeStory].image} alt={stories[activeStory].title} className="absolute inset-0 h-full w-full object-cover transition duration-500" />
-              <div className="absolute inset-x-5 bottom-5 rounded-[23px] bg-white/95 p-6 shadow-xl backdrop-blur sm:inset-x-7 sm:bottom-7 sm:p-7"><span className="text-[10px] font-black uppercase tracking-[.18em] text-[#71907a]">Yang ingin diwujudkan</span><h3 className="mt-2 text-2xl font-black leading-tight text-[#25342b]">{stories[activeStory].title}</h3><p className="mt-3 text-sm font-medium leading-6 text-[#647168]">{stories[activeStory].text}</p><a href={wa} target="_blank" rel="noreferrer" className="mt-5 inline-flex rounded-full bg-[#2f6b4a] px-5 py-3 text-xs font-black text-white">Bicarakan kebutuhan ini →</a></div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <section id="perjalanan" className="relative overflow-hidden bg-[#2f6b4a] py-20 text-white sm:py-28"><div className="absolute right-[-160px] top-[-100px] h-[440px] w-[440px] rounded-full border-[70px] border-white/5" /><div className="relative mx-auto w-[min(1180px,calc(100%-32px))]"><div className="max-w-3xl"><span className="text-xs font-black uppercase tracking-[.18em] text-[#b9dfc0]">02 · Dari cerita menjadi jalan</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] sm:text-7xl">Sebuah ruang tidak dimulai dari gambar.</h2><p className="mt-6 max-w-2xl text-base font-medium leading-7 text-white/75">Ia dimulai dari kehidupan orang yang akan menggunakannya. Karena itu, proses pertama adalah memahami sebelum menyarankan.</p></div><div className="mt-12 grid gap-px overflow-hidden rounded-[28px] bg-white/15 md:grid-cols-3">{[["01", "Cerita", "Apa yang ingin dibuat, diperbaiki, atau dirasakan? Ceritakan dengan bahasa Anda sendiri."], ["02", "Pahami", "Kebutuhan, kondisi, prioritas, dan gambaran biaya dirapikan agar lebih mudah dipahami."], ["03", "Hubungkan", "Bila dibutuhkan, Anda diarahkan kepada partner profesional yang sesuai dengan kebutuhan proyek."]].map(([no, title, text]) => <div key={no} className="bg-[#2f6b4a] p-7 sm:p-9"><span className="text-xs font-black text-[#b9dfc0]">{no}</span><h3 className="mt-12 text-3xl font-black">{title}</h3><p className="mt-4 text-sm font-medium leading-6 text-white/70">{text}</p></div>)}</div><div className="mt-9 flex flex-wrap items-center gap-5"><a href={leadUrl} className="rounded-full bg-white px-7 py-4 text-sm font-black text-[#2f6b4a] transition hover:-translate-y-1">Mulai percakapan →</a><a href="/projects" className="text-sm font-bold text-white/75 underline decoration-white/20 underline-offset-4 hover:text-white">Lihat inspirasi proyek</a></div></div></section>
 
-      <section className="bg-white py-20 sm:py-24">
-        <div className="mx-auto w-[min(1180px,calc(100%-32px))]">
-          <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
-            <div><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">Untuk yang masih mencari jawaban</span><h2 className="mt-4 text-4xl font-black leading-[.98] tracking-[-.045em] text-[#25342b] sm:text-5xl">Banyak pertanyaan lebih baik dijawab sebelum proyek dimulai.</h2></div>
-            <p className="max-w-xl text-sm font-medium leading-7 text-[#69756e] lg:justify-self-end">Bagian ini sengaja dibuat informatif. Selain membantu Anda memahami pilihan, informasi yang jelas membuat pencarian seperti <strong className="text-[#405047]">desain rumah, jasa arsitek, renovasi rumah, interior, ruang usaha, dan estimasi biaya</strong> punya tempat yang relevan di dalam website.</p>
-          </div>
-          <div className="mt-10 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {topics.map(([title, text]) => <a href={title === "Estimasi biaya" ? "#estimasi" : "#cerita"} key={title} className="group rounded-[22px] border border-[#e5e9e4] bg-[#fbfaf6] p-6 transition hover:-translate-y-1 hover:bg-white hover:shadow-lg"><span className="text-[10px] font-black uppercase tracking-[.15em] text-[#73907c]">Panduan singkat</span><h3 className="mt-3 text-xl font-black text-[#304138]">{title}</h3><p className="mt-2 text-sm font-medium leading-6 text-[#707b74]">{text}</p><span className="mt-4 inline-block text-xs font-black text-[#2f6b4a]">Pelajari dari kebutuhan →</span></a>)}
-          </div>
-        </div>
-      </section>
+      <section className="bg-[#fbfaf6] py-20 sm:py-28"><div className="mx-auto w-[min(1180px,calc(100%-32px))]"><div className="grid gap-10 lg:grid-cols-[1fr_.9fr] lg:items-center"><div className="relative overflow-hidden rounded-[32px] bg-[#e7eee7] p-2"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1500&q=88" alt="Interior rumah hangat dan nyaman" className="h-[500px] w-full rounded-[27px] object-cover" /><div className="absolute left-6 top-6 max-w-[230px] rounded-2xl bg-white/95 p-5 shadow-xl"><p className="text-[10px] font-black tracking-[.15em] text-[#748079]">CARA PANDANG</p><p className="mt-2 text-lg font-black leading-6">Bagus dilihat. Nyaman dijalani.</p></div></div><div className="lg:pl-8"><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">03 · Prinsip sederhana</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] text-[#25342b] sm:text-6xl">Yang penting bukan kelihatan hebat.</h2><p className="mt-6 text-base font-medium leading-8 text-[#68746d]">Ruang yang baik harus masuk akal untuk orang yang menggunakannya. Nyaman, fungsional, sesuai kemampuan, dan punya karakter yang terasa seperti pemiliknya.</p><div className="mt-7 space-y-3">{["Kebutuhan lebih dulu, gaya menyusul.", "Anggaran dibicarakan dengan terbuka.", "Profesional dipilih sesuai kebutuhan proyek."].map((item, i) => <div key={item} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e8ebe5]"><span className="grid h-9 w-9 place-items-center rounded-full bg-[#e8f1e9] text-sm font-black text-[#2f6b4a]">{i + 1}</span><span className="text-sm font-bold text-[#405047]">{item}</span></div>)}</div><a href="#faq" className="mt-6 inline-block text-sm font-black text-[#2f6b4a] underline decoration-[#b9d4bd] underline-offset-4">Baca pertanyaan yang sering muncul →</a></div></div></div></section>
 
-      <section id="perjalanan" className="relative overflow-hidden bg-[#2f6b4a] py-20 text-white sm:py-28">
-        <div className="absolute right-[-160px] top-[-100px] h-[440px] w-[440px] rounded-full border-[70px] border-white/5" />
-        <div className="relative mx-auto w-[min(1180px,calc(100%-32px))]">
-          <div className="max-w-3xl"><span className="text-xs font-black uppercase tracking-[.18em] text-[#b9dfc0]">02 · Dari cerita menjadi jalan</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] sm:text-7xl">Sebuah ruang tidak dimulai dari gambar.</h2><p className="mt-6 max-w-2xl text-base font-medium leading-7 text-white/75">Ia dimulai dari kehidupan orang yang akan menggunakannya. Karena itu, proses pertama adalah memahami sebelum menyarankan.</p></div>
-          <div className="mt-12 grid gap-px overflow-hidden rounded-[28px] bg-white/15 md:grid-cols-3">
-            {[["01", "Cerita", "Apa yang ingin dibuat, diperbaiki, atau dirasakan? Ceritakan dengan bahasa Anda sendiri."], ["02", "Pahami", "Kebutuhan, kondisi, prioritas, dan gambaran biaya dirapikan agar lebih mudah dipahami."], ["03", "Hubungkan", "Bila dibutuhkan, Anda diarahkan kepada partner profesional yang sesuai dengan kebutuhan proyek."]].map(([no, title, text]) => <div key={no} className="bg-[#2f6b4a] p-7 sm:p-9"><span className="text-xs font-black text-[#b9dfc0]">{no}</span><h3 className="mt-12 text-3xl font-black">{title}</h3><p className="mt-4 text-sm font-medium leading-6 text-white/70">{text}</p></div>)}
-          </div>
-          <div className="mt-9 flex flex-wrap items-center gap-5"><a href={wa} target="_blank" rel="noreferrer" className="rounded-full bg-white px-7 py-4 text-sm font-black text-[#2f6b4a] transition hover:-translate-y-1">Mulai percakapan →</a><a href="/projects" className="text-sm font-bold text-white/75 underline decoration-white/20 underline-offset-4 hover:text-white">Lihat inspirasi proyek</a></div>
-        </div>
-      </section>
+      <section id="estimasi" className="bg-[#fff0dc] py-20 sm:py-28"><div className="mx-auto w-[min(1180px,calc(100%-32px))]"><div className="mb-10 grid gap-6 lg:grid-cols-[.9fr_1.1fr] lg:items-end"><div><span className="text-xs font-black uppercase tracking-[.18em] text-[#a36a2c]">04 · Sebelum mengambil keputusan</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] text-[#3b3125] sm:text-6xl">Penasaran harus menyiapkan berapa?</h2></div><p className="max-w-xl text-sm font-medium leading-7 text-[#796b5b] lg:justify-self-end">Gunakan estimator sebagai gambaran awal biaya jasa desain. Angka bukan quotation final, tetapi dapat membantu Anda mulai berpikir lebih realistis.</p></div><div className="overflow-hidden rounded-[30px] bg-white shadow-[0_25px_80px_rgba(94,69,37,.12)]"><ArchitectureEstimator /></div></div></section>
 
-      <section className="bg-[#fbfaf6] py-20 sm:py-28">
-        <div className="mx-auto w-[min(1180px,calc(100%-32px))]">
-          <div className="grid gap-10 lg:grid-cols-[1fr_.9fr] lg:items-center">
-            <div className="relative overflow-hidden rounded-[32px] bg-[#e7eee7] p-2"><img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1500&q=88" alt="Interior rumah hangat dan nyaman" className="h-[500px] w-full rounded-[27px] object-cover" /><div className="absolute left-6 top-6 max-w-[230px] rounded-2xl bg-white/95 p-5 shadow-xl"><p className="text-[10px] font-black tracking-[.15em] text-[#748079]">CARA PANDANG</p><p className="mt-2 text-lg font-black leading-6">Bagus dilihat. Nyaman dijalani.</p></div></div>
-            <div className="lg:pl-8"><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">03 · Prinsip sederhana</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] text-[#25342b] sm:text-6xl">Yang penting bukan kelihatan hebat.</h2><p className="mt-6 text-base font-medium leading-8 text-[#68746d]">Ruang yang baik harus masuk akal untuk orang yang menggunakannya. Nyaman, fungsional, sesuai kemampuan, dan punya karakter yang terasa seperti pemiliknya.</p><div className="mt-7 space-y-3">{["Kebutuhan lebih dulu, gaya menyusul.", "Anggaran dibicarakan dengan terbuka.", "Profesional dipilih sesuai kebutuhan proyek."].map((item, i) => <div key={item} className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-[#e8ebe5]"><span className="grid h-9 w-9 place-items-center rounded-full bg-[#e8f1e9] text-sm font-black text-[#2f6b4a]">{i + 1}</span><span className="text-sm font-bold text-[#405047]">{item}</span></div>)}</div><a href="#faq" className="mt-6 inline-block text-sm font-black text-[#2f6b4a] underline decoration-[#b9d4bd] underline-offset-4">Baca pertanyaan yang sering muncul →</a></div>
-          </div>
-        </div>
-      </section>
+      <section id="faq" className="bg-white py-20 sm:py-28"><div className="mx-auto w-[min(1000px,calc(100%-32px))]"><div className="text-center"><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">05 · Pertanyaan yang sering muncul</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] text-[#25342b] sm:text-6xl">Masih ingin memastikan sesuatu?</h2><p className="mx-auto mt-5 max-w-xl text-sm font-medium leading-6 text-[#707b74]">Tidak apa-apa. Lebih baik bertanya dulu daripada terburu-buru.</p></div><div className="mt-10 divide-y divide-[#e8ebe6] border-y border-[#e8ebe6]">{faqs.map(([question, answer], i) => <div key={question}><button type="button" onClick={() => setFaqOpen(faqOpen === i ? null : i)} className="flex w-full items-center justify-between gap-6 py-6 text-left"><span className="text-lg font-black text-[#304138]">{question}</span><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#edf3ed] text-xl font-medium text-[#2f6b4a] transition ${faqOpen === i ? "rotate-45" : ""}`}>+</span></button>{faqOpen === i && <div className="max-w-3xl pb-7 pr-10 text-sm font-medium leading-7 text-[#6b7770]">{answer}</div>}</div>)}</div></div></section>
 
-      <section id="estimasi" className="bg-[#fff0dc] py-20 sm:py-28">
-        <div className="mx-auto w-[min(1180px,calc(100%-32px))]">
-          <div className="mb-10 grid gap-6 lg:grid-cols-[.9fr_1.1fr] lg:items-end"><div><span className="text-xs font-black uppercase tracking-[.18em] text-[#a36a2c]">04 · Sebelum mengambil keputusan</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] text-[#3b3125] sm:text-6xl">Penasaran harus menyiapkan berapa?</h2></div><p className="max-w-xl text-sm font-medium leading-7 text-[#796b5b] lg:justify-self-end">Gunakan estimator sebagai gambaran awal biaya jasa desain. Angka bukan quotation final, tetapi dapat membantu Anda mulai berpikir lebih realistis.</p></div>
-          <div className="overflow-hidden rounded-[30px] bg-white shadow-[0_25px_80px_rgba(94,69,37,.12)]"><ArchitectureEstimator /></div>
-        </div>
-      </section>
-
-      <section id="faq" className="bg-white py-20 sm:py-28">
-        <div className="mx-auto w-[min(1000px,calc(100%-32px))]">
-          <div className="text-center"><span className="text-xs font-black uppercase tracking-[.18em] text-[#4d8a61]">05 · Pertanyaan yang sering muncul</span><h2 className="mt-4 text-5xl font-black leading-[.95] tracking-[-.055em] text-[#25342b] sm:text-6xl">Masih ingin memastikan sesuatu?</h2><p className="mx-auto mt-5 max-w-xl text-sm font-medium leading-6 text-[#707b74]">Tidak apa-apa. Lebih baik bertanya dulu daripada terburu-buru.</p></div>
-          <div className="mt-10 divide-y divide-[#e8ebe6] border-y border-[#e8ebe6]">{faqs.map(([question, answer], i) => <div key={question}><button type="button" onClick={() => setFaqOpen(faqOpen === i ? null : i)} className="flex w-full items-center justify-between gap-6 py-6 text-left"><span className="text-lg font-black text-[#304138]">{question}</span><span className={`grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#edf3ed] text-xl font-medium text-[#2f6b4a] transition ${faqOpen === i ? "rotate-45" : ""}`}>+</span></button>{faqOpen === i && <div className="max-w-3xl pb-7 pr-10 text-sm font-medium leading-7 text-[#6b7770]">{answer}</div>}</div>)}</div>
-        </div>
-      </section>
-
-      <section id="contact" className="bg-[#f5d8b8] py-20 sm:py-28">
-        <div className="mx-auto w-[min(1180px,calc(100%-32px))]">
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-end"><div><span className="text-xs font-black uppercase tracking-[.18em] text-[#8a5d35]">06 · Langkah berikutnya</span><h2 className="mt-4 max-w-4xl text-6xl font-black leading-[.9] tracking-[-.065em] text-[#3b3025] sm:text-8xl">Punya rencana?<br /><span className="text-[#6c5036]">Cerita saja.</span></h2><p className="mt-6 max-w-xl text-base font-medium leading-7 text-[#715d49]">Satu percakapan bisa membantu membuat sesuatu yang masih ada di kepala menjadi lebih jelas.</p></div><div className="lg:justify-self-end"><a href={wa} target="_blank" rel="noreferrer" className="group flex min-w-[280px] items-center justify-between rounded-[22px] bg-[#2f6b4a] px-6 py-5 text-white shadow-2xl transition hover:-translate-y-1 sm:min-w-[360px]"><span><span className="block text-[10px] font-black uppercase tracking-[.16em] text-white/55">Langkah pertama</span><span className="mt-1 block text-lg font-black">Ceritakan rencana Anda</span></span><span className="grid h-11 w-11 place-items-center rounded-full bg-white text-lg text-[#2f6b4a] transition group-hover:translate-x-1">→</span></a><p className="mt-4 text-center text-xs font-semibold text-[#856e57]">Rumah · Renovasi · Interior · Ruang usaha</p></div></div>
-        </div>
-      </section>
+      <section id="contact" className="bg-[#f5d8b8] py-20 sm:py-28"><div className="mx-auto w-[min(1180px,calc(100%-32px))]"><div className="grid gap-8 lg:grid-cols-[1.1fr_.9fr] lg:items-end"><div><span className="text-xs font-black uppercase tracking-[.18em] text-[#8a5d35]">06 · Langkah berikutnya</span><h2 className="mt-4 max-w-4xl text-6xl font-black leading-[.9] tracking-[-.065em] text-[#3b3025] sm:text-8xl">Punya rencana?<br /><span className="text-[#6c5036]">Cerita saja.</span></h2><p className="mt-6 max-w-xl text-base font-medium leading-7 text-[#715d49]">Satu percakapan bisa membantu membuat sesuatu yang masih ada di kepala menjadi lebih jelas.</p></div><div className="lg:justify-self-end"><a href={leadUrl} className="group flex min-w-[280px] items-center justify-between rounded-[22px] bg-[#2f6b4a] px-6 py-5 text-white shadow-2xl transition hover:-translate-y-1 sm:min-w-[360px]"><span><span className="block text-[10px] font-black uppercase tracking-[.16em] text-white/55">Langkah pertama</span><span className="mt-1 block text-lg font-black">Ceritakan rencana Anda</span></span><span className="grid h-11 w-11 place-items-center rounded-full bg-white text-lg text-[#2f6b4a] transition group-hover:translate-x-1">→</span></a><p className="mt-4 text-center text-xs font-semibold text-[#856e57]">Rumah · Renovasi · Interior · Ruang usaha</p></div></div></div></section>
 
       <footer className="bg-[#25342b] py-12 text-white"><div className="mx-auto grid w-[min(1180px,calc(100%-32px))] gap-8 sm:grid-cols-[1fr_auto]"><div><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-[14px] bg-white text-sm font-black text-[#2f6b4a]">RA</span><span className="text-sm font-black tracking-[.12em]">RUMAH ARSITEK</span></div><p className="mt-4 max-w-xl text-sm font-medium leading-6 text-white/55">Partner awal untuk membantu Anda memahami kebutuhan ruang, memperkirakan langkah, dan menemukan profesional yang sesuai.</p></div><div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/55"><a href="#cerita" className="hover:text-white">Kebutuhan</a><a href="/projects" className="hover:text-white">Inspirasi</a><a href="#estimasi" className="hover:text-white">Estimasi</a><a href="/contact" className="hover:text-white">Konsultasi</a><span>© {new Date().getFullYear()}</span></div></div></footer>
-
-      <a href={wa} target="_blank" rel="noreferrer" className="fixed bottom-4 left-4 right-4 z-40 flex items-center justify-center rounded-full bg-[#2f6b4a] px-5 py-4 text-sm font-black text-white shadow-2xl shadow-black/20 sm:hidden">Ceritakan rencana Anda →</a>
+      <a href={leadUrl} className="fixed bottom-4 left-4 right-4 z-40 flex items-center justify-center rounded-full bg-[#2f6b4a] px-5 py-4 text-sm font-black text-white shadow-2xl shadow-black/20 sm:hidden">Ceritakan rencana Anda →</a>
     </main>
   );
 }
