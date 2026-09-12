@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import FloatingNavigation from "@/components/FloatingNavigation";
+import Footer from "@/components/Footer";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const siteName = "RUMAH ARSITEK";
@@ -99,6 +100,7 @@ export default function RootLayout({
     <html lang="id">
       <body>
         {children}
+        <Footer />
         <FloatingNavigation />
         <script
           type="application/ld+json"
