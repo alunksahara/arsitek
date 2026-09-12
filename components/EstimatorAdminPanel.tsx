@@ -29,6 +29,8 @@ const DEFAULTS: Settings = {
   min_area: 20,
 };
 
+const SETTINGS_KEYS = Object.keys(DEFAULTS) as (keyof Settings)[];
+
 const money = (value: number) =>
   new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -36,21 +38,59 @@ const money = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const SAME_KEYS: (keyof Settings)[] = [
-  "essential_rate",
-  "signature_rate",
-  "premium_rate",
-  "rumah_baru_multiplier",
-  "renovasi_multiplier",
-  "villa_multiplier",
-  "commercial_multiplier",
-  "min_range_multiplier",
-  "max_range_multiplier",
-  "min_area",
-];
+function normalizeSettings(input: Partial<Settings> | null | undefined): Settings {
+  const result = { ...DEFAULTS };
+
+  for (const key of SETTINGS_KEYS) {
+    const value = Number(input?.[key]);
+    if (Number.isFinite(value)) result[key] = value;
+  }
+
+  return result;
+}
+
+function validateSettings(settings: Settings): string | null {
+  const rates: (keyof Settings)[] = ["essential_rate", "signature_rate", "premium_rate"];
+  for (const key of rates) {
+    if (!Number.isFinite(settings[key]) || settings[key] < 0) {
+      return "Tarif desain tidak boleh negatif atau tidak valid.";
+    }
+  }
+
+  const multipliers: (keyof Settings)[] = [
+    "rumah_baru_multiplier",
+    "renovasi_multiplier",
+    "villa_multiplier",
+    "commercial_multiplier",
+  ];
+  for (const key of multipliers) {
+    if (!Number.isFinite(settings[key]) || settings[key] <= 0 || settings[key] > 10) {
+      return "Multiplier proyek harus berada di atas 0 dan maksimal 10.";
+    }
+  }
+
+  if (!Number.isFinite(settings.min_area) || settings.min_area < 1) {
+    return "Luas minimum harus minimal 1 m².";
+  }
+
+  if (
+    !Number.isFinite(settings.min_range_multiplier) ||
+    settings.min_range_multiplier <= 0 ||
+    !Number.isFinite(settings.max_range_multiplier) ||
+    settings.max_range_multiplier <= 0
+  ) {
+    return "Range estimator harus lebih besar dari 0.";
+  }
+
+  if (settings.max_range_multiplier < settings.min_range_multiplier) {
+    return "Range maksimum tidak boleh lebih kecil dari range minimum.";
+  }
+
+  return null;
+}
 
 function sameSettings(a: Settings, b: Settings) {
-  return SAME_KEYS.every((key) => Number(a[key]) === Number(b[key]));
+  return SETTINGS_KEYS.every((key) => Number(a[key]) === Number(b[key]));
 }
 
 export default function EstimatorAdminPanel() {
@@ -58,19 +98,21 @@ export default function EstimatorAdminPanel() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [error, setError] = useState(false);
 
   async function load() {
     setLoading(true);
     setMessage("");
+    setError(false);
+
     try {
-      const response = await fetch("/api/admin/estimator", {
-        cache: "no-store",
-      });
+      const response = await fetch("/api/admin/estimator", { cache: "no-store" });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal mengambil konfigurasi estimator.");
-      setSettings({ ...DEFAULTS, ...(data.settings || {}) });
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Gagal mengambil konfigurasi estimator.");
+      setSettings(normalizeSettings(data.settings));
+    } catch (loadError) {
+      setError(true);
+      setMessage(loadError instanceof Error ? loadError.message : "Gagal mengambil konfigurasi estimator.");
     } finally {
       setLoading(false);
     }
@@ -82,26 +124,36 @@ export default function EstimatorAdminPanel() {
 
   function update(key: keyof Settings, value: string) {
     const number = Number(value);
-    setSettings((current) => ({
-      ...current,
-      [key]: Number.isFinite(number) ? number : 0,
-    }));
+    setSettings((current) => ({ ...current, [key]: Number.isFinite(number) ? number : 0 }));
+    setError(false);
+    setMessage("");
   }
 
   async function save() {
+    const normalized = normalizeSettings(settings);
+    const validationError = validateSettings(normalized);
+
+    if (validationError) {
+      setError(true);
+      setMessage(validationError);
+      return;
+    }
+
     setSaving(true);
     setMessage("");
+    setError(false);
+
     try {
       const response = await fetch("/api/admin/estimator", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
-        body: JSON.stringify(settings),
+        body: JSON.stringify(normalized),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Gagal menyimpan konfigurasi estimator.");
 
-      const saved = { ...DEFAULTS, ...(data.settings || {}) } as Settings;
+      const saved = normalizeSettings(data.settings);
       setSettings(saved);
 
       const verifyResponse = await fetch(`/api/estimator?verify=${Date.now()}`, {
@@ -109,18 +161,20 @@ export default function EstimatorAdminPanel() {
         cache: "no-store",
       });
       const verifyData = await verifyResponse.json();
+
       if (!verifyResponse.ok) {
         throw new Error("Konfigurasi tersimpan, tetapi verifikasi estimator publik gagal.");
       }
 
-      const publicSettings = { ...DEFAULTS, ...(verifyData.settings || {}) } as Settings;
+      const publicSettings = normalizeSettings(verifyData.settings);
       if (!sameSettings(saved, publicSettings)) {
-        throw new Error("Peringatan: data Admin tersimpan, tetapi estimator publik masih membaca konfigurasi berbeda.");
+        throw new Error("Peringatan: konfigurasi admin tersimpan, tetapi estimator publik masih membaca data berbeda.");
       }
 
       setMessage("Konfigurasi tersimpan dan sudah terverifikasi di estimator publik.");
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Gagal menyimpan konfigurasi estimator.");
+    } catch (saveError) {
+      setError(true);
+      setMessage(saveError instanceof Error ? saveError.message : "Gagal menyimpan konfigurasi estimator.");
     } finally {
       setSaving(false);
     }
@@ -153,25 +207,15 @@ export default function EstimatorAdminPanel() {
       <div className="rounded-3xl border border-[#d5d0c7] bg-white p-5 shadow-sm sm:p-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#eef3ed] px-3 py-1.5 text-xs font-semibold text-[#2f6b4a]">
-              <Calculator size={14} /> Estimator terpusat
-            </div>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#181817] sm:text-3xl">
-              Konfigurasi estimator RUMAH ARSITEK
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#454545]">
-              Nilai di halaman ini disimpan ke Supabase. Tidak lagi bergantung pada localStorage browser, sehingga konfigurasi admin dan estimator publik menggunakan sumber data yang sama.
-            </p>
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#eef3ed] px-3 py-1.5 text-xs font-semibold text-[#2f6b4a]"><Calculator size={14} /> Estimator terpusat</div>
+            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#181817] sm:text-3xl">Konfigurasi estimator RUMAH ARSITEK</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#454545]">Nilai di halaman ini disimpan ke Supabase. Tidak lagi bergantung pada localStorage browser, sehingga konfigurasi admin dan estimator publik menggunakan sumber data yang sama.</p>
           </div>
-          <button type="button" onClick={load} disabled={loading || saving} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c4bb] bg-white px-4 py-2.5 text-sm font-semibold text-[#252525] hover:bg-[#faf9f6] disabled:opacity-50">
-            <RefreshCw size={15} /> Muat ulang
-          </button>
+          <button type="button" onClick={load} disabled={loading || saving} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c4bb] bg-white px-4 py-2.5 text-sm font-semibold text-[#252525] hover:bg-[#faf9f6] disabled:opacity-50"><RefreshCw size={15} /> Muat ulang</button>
         </div>
 
         {message && (
-          <div className="mt-5 rounded-xl border border-[#d5d0c7] bg-[#faf9f6] px-4 py-3 text-sm font-medium text-[#333333]">
-            {message}
-          </div>
+          <div role={error ? "alert" : "status"} className={`mt-5 rounded-xl border px-4 py-3 text-sm font-medium ${error ? "border-red-200 bg-red-50 text-red-700" : "border-[#d5d0c7] bg-[#faf9f6] text-[#333333]"}`}>{message}</div>
         )}
 
         <fieldset disabled={loading || saving} className="mt-7 space-y-7">
@@ -202,31 +246,16 @@ export default function EstimatorAdminPanel() {
           <section>
             <h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Batas estimasi</h2>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
-              <label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4">
-                <span className="text-xs font-semibold text-[#454545]">Minimum luas (m²)</span>
-                <input type="number" min="1" value={settings.min_area} onChange={(event) => update("min_area", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" />
-              </label>
-              <label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4">
-                <span className="text-xs font-semibold text-[#454545]">Range minimum</span>
-                <input type="number" min="0.01" step="0.01" value={settings.min_range_multiplier} onChange={(event) => update("min_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" />
-              </label>
-              <label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4">
-                <span className="text-xs font-semibold text-[#454545]">Range maksimum</span>
-                <input type="number" min="0.01" step="0.01" value={settings.max_range_multiplier} onChange={(event) => update("max_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" />
-              </label>
+              <label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Minimum luas (m²)</span><input type="number" min="1" value={settings.min_area} onChange={(event) => update("min_area", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>
+              <label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Range minimum</span><input type="number" min="0.01" step="0.01" value={settings.min_range_multiplier} onChange={(event) => update("min_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>
+              <label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Range maksimum</span><input type="number" min="0.01" step="0.01" value={settings.max_range_multiplier} onChange={(event) => update("max_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>
             </div>
           </section>
         </fieldset>
 
         <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="rounded-2xl bg-[#181817] p-5 text-white">
-            <div className="text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Preview 120 m² · Rumah Baru · Signature</div>
-            <div className="mt-3 text-xl font-bold sm:text-2xl">{money(preview.min)} — {money(preview.max)}</div>
-            <p className="mt-2 text-xs leading-5 text-white/90">Preview ini hanya untuk memastikan perubahan tarif dan range masuk akal sebelum disimpan.</p>
-          </div>
-          <button type="button" onClick={save} disabled={loading || saving} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#255c45] px-6 py-3 text-sm font-bold text-white hover:bg-[#1d4c39] disabled:opacity-50">
-            <Save size={16} /> {saving ? "Menyimpan..." : "Simpan ke Supabase"}
-          </button>
+          <div className="rounded-2xl bg-[#181817] p-5 text-white"><div className="text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Preview 120 m² · Rumah Baru · Signature</div><div className="mt-3 text-xl font-bold sm:text-2xl">{money(preview.min)} — {money(preview.max)}</div><p className="mt-2 text-xs leading-5 text-white/90">Preview ini hanya untuk memastikan perubahan tarif dan range masuk akal sebelum disimpan.</p></div>
+          <button type="button" onClick={save} disabled={loading || saving} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#255c45] px-6 py-3 text-sm font-bold text-white hover:bg-[#1d4c39] disabled:opacity-50"><Save size={16} /> {saving ? "Menyimpan..." : "Simpan ke Supabase"}</button>
         </div>
       </div>
     </div>
