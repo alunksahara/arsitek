@@ -27,6 +27,14 @@ export default function FloatingNavigation() {
         </button>
       )}
       <Link
+        href="/services"
+        className="hidden h-11 items-center gap-2 rounded-full border border-[#24563b] bg-white px-4 text-xs font-black text-[#24563b] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#e9f1eb] sm:inline-flex"
+        aria-label="Lihat layanan RUMAH ARSITEK"
+      >
+        <span aria-hidden="true">✦</span>
+        <span>Layanan</span>
+      </Link>
+      <Link
         href="/lokasi"
         className="hidden h-11 items-center gap-2 rounded-full border border-[#24563b] bg-white px-4 text-xs font-black text-[#24563b] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#e9f1eb] sm:inline-flex"
         aria-label="Lihat lokasi RUMAH ARSITEK"
