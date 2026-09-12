@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Globe2, LayoutDashboard, Users } from "lucide-react";
+import { Calculator, Globe2, LayoutDashboard, Users } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
+import EstimatorAdminPanel from "@/components/EstimatorAdminPanel";
 import LocationManager from "@/components/LocationManager";
 import TeamAdminHub from "@/components/TeamAdminHub";
 import type { UserRole } from "@/lib/admin";
 
-type MainTab = "dashboard" | "locations" | "team";
+type MainTab = "dashboard" | "locations" | "estimator" | "team";
 
 export default function AdminDashboardShell({ role }: { role: UserRole }) {
   const isAdmin = role === "admin";
@@ -34,6 +35,12 @@ export default function AdminDashboardShell({ role }: { role: UserRole }) {
             </button>
 
             {isAdmin && (
+              <button type="button" onClick={() => setTab("estimator")} className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition ${tab === "estimator" ? "bg-[#181817] text-white" : "border border-[#d5d0c7] bg-white hover:bg-[#faf9f6]"}`}>
+                <Calculator size={14} /> Estimator
+              </button>
+            )}
+
+            {isAdmin && (
               <button type="button" onClick={() => setTab("team")} className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition ${tab === "team" ? "bg-[#181817] text-white" : "border border-[#d5d0c7] bg-white hover:bg-[#faf9f6]"}`}>
                 <Users size={14} /> Team & User
               </button>
@@ -44,6 +51,8 @@ export default function AdminDashboardShell({ role }: { role: UserRole }) {
 
       {tab === "dashboard" && isAdmin ? (
         <AdminDashboard />
+      ) : tab === "estimator" && isAdmin ? (
+        <EstimatorAdminPanel />
       ) : tab === "team" && isAdmin ? (
         <TeamAdminHub />
       ) : (
