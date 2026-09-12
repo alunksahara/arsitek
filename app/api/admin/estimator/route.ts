@@ -110,7 +110,8 @@ export async function PATCH(request: Request) {
     const result = normalize(body as Record<string, unknown>);
 
     if ("error" in result) {
-      return jsonError(result.error, 400);
+      const message = result.error;
+      return jsonError(message, 400);
     }
 
     const supabase = createAdminSupabase();
