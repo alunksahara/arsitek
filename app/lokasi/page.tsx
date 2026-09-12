@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { createAdminSupabase } from "@/lib/supabase-admin";
+import { getPublishedLocations } from "@/lib/public-content";
 
 export const revalidate = 60;
 
@@ -11,15 +11,7 @@ export const metadata = {
 };
 
 export default async function LokasiPage() {
-  const supabase = createAdminSupabase();
-  const { data: locations } = await supabase
-    .from("locations")
-    .select("city,slug,province,seo_description,h1,intro,sort_order")
-    .eq("published", true)
-    .order("sort_order", { ascending: true })
-    .order("city", { ascending: true });
-
-  const activeLocations = locations || [];
+  const activeLocations = await getPublishedLocations();
 
   return (
     <main className="min-h-screen bg-[#fbfaf6] text-[#25342b]">
@@ -60,7 +52,7 @@ export default async function LokasiPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {activeLocations.map((location) => (
               <Link key={location.slug} href={`/lokasi/${location.slug}`} className="group rounded-3xl border border-[#d8e0d9] bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:border-[#9bb5a2] hover:shadow-xl">
-                <p className="text-xs font-black uppercase tracking-[.14em] text-[#6a766f]">{location.province}</p>
+                <p className="text-xs font-black uppercase tracking-[.14em] text-[#4b554f]">{location.province}</p>
                 <h3 className="mt-14 font-serif text-3xl font-normal text-[#25342b]">{location.h1 || `RUMAH ARSITEK ${location.city}`}</h3>
                 <p className="mt-3 text-sm leading-6 text-[#3f4c44]">{location.seo_description || location.intro}</p>
                 <span className="mt-7 inline-flex text-sm font-black text-[#2f6b4a]">Jelajahi {location.city} →</span>
