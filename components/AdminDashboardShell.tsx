@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Calculator, Globe2, LayoutDashboard, Users } from "lucide-react";
 import AdminDashboard from "@/components/AdminDashboard";
+import AdminLeadNotification from "@/components/AdminLeadNotification";
 import EstimatorAdminPanel from "@/components/EstimatorAdminPanel";
 import LocationManager from "@/components/LocationManager";
 import TeamAdminHub from "@/components/TeamAdminHub";
@@ -16,6 +17,7 @@ export default function AdminDashboardShell({ role }: { role: UserRole }) {
 
   return (
     <main className="admin-dashboard-shell min-h-screen bg-[#f7f5f0] text-[#181817]">
+      {isAdmin && <AdminLeadNotification />}
       <div className="border-b border-[#d5d0c7] bg-[#f7f5f0]/95 px-4 py-3 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3">
           <div>
