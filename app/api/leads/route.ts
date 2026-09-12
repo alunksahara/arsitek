@@ -202,7 +202,10 @@ export async function GET(
           `name.ilike.%${search}%`,
           `email.ilike.%${search}%`,
           `phone.ilike.%${search}%`,
+          `project_type.ilike.%${search}%`,
+          `budget.ilike.%${search}%`,
           `message.ilike.%${search}%`,
+          `notes.ilike.%${search}%`,
         ].join(",")
       );
     }
@@ -350,88 +353,88 @@ export async function POST(
     }
 
     if (
-  email &&
-  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    email
-  )
-) {
-  return jsonError(
-    "Format email tidak valid.",
-    422
-  );
-}
-
-/* ==========================================
-   RATE LIMIT
-========================================== */
-
-const turnstileToken =
-  typeof body?.turnstileToken === "string"
-    ? body.turnstileToken
-        .trim()
-        .slice(0, 5000)
-    : "";
-
-const forwardedFor =
-  request.headers.get(
-    "x-forwarded-for"
-  );
-
-const ip =
-  forwardedFor
-    ?.split(",")[0]
-    ?.trim() ||
-  request.headers.get(
-    "x-real-ip"
-  ) ||
-  "unknown";
-
-const rateLimit =
-  await enforceLeadRateLimit(ip);
-
-if (!rateLimit.allowed) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error:
-        "Terlalu banyak permintaan. Silakan coba lagi nanti.",
-    },
-    {
-      status: 429,
+      email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        email
+      )
+    ) {
+      return jsonError(
+        "Format email tidak valid.",
+        422
+      );
     }
-  );
-}
 
-/* ==========================================
-   TURNSTILE
-========================================== */
+    /* ==========================================
+       RATE LIMIT
+    ========================================== */
 
-const turnstile =
-  await verifyTurnstile(
-    turnstileToken,
-    request
-  );
+    const turnstileToken =
+      typeof body?.turnstileToken === "string"
+        ? body.turnstileToken
+            .trim()
+            .slice(0, 5000)
+        : "";
 
-if (!turnstile.ok) {
-  return NextResponse.json(
-    {
-      ok: false,
-      error:
-        turnstile.error ||
-        "Verifikasi keamanan gagal.",
-    },
-    {
-      status: 403,
+    const forwardedFor =
+      request.headers.get(
+        "x-forwarded-for"
+      );
+
+    const ip =
+      forwardedFor
+        ?.split(",")[0]
+        ?.trim() ||
+      request.headers.get(
+        "x-real-ip"
+      ) ||
+      "unknown";
+
+    const rateLimit =
+      await enforceLeadRateLimit(ip);
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Terlalu banyak permintaan. Silakan coba lagi nanti.",
+        },
+        {
+          status: 429,
+        }
+      );
     }
-  );
-}
 
-/* ==========================================
-   SUPABASE
-========================================== */
+    /* ==========================================
+       TURNSTILE
+    ========================================== */
 
-const supabase =
-  getServerSupabase();
+    const turnstile =
+      await verifyTurnstile(
+        turnstileToken,
+        request
+      );
+
+    if (!turnstile.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            turnstile.error ||
+            "Verifikasi keamanan gagal.",
+        },
+        {
+          status: 403,
+        }
+      );
+    }
+
+    /* ==========================================
+       SUPABASE
+    ========================================== */
+
+    const supabase =
+      getServerSupabase();
 
     const {
       data,
@@ -499,6 +502,7 @@ const supabase =
    ADMIN ONLY
 
    Digunakan untuk:
+   - perubahan data lead
    - perubahan status
    - perubahan notes
 ====================================================== */
@@ -536,27 +540,45 @@ export async function PATCH(
       );
     }
 
-    const requestedStatus =
-      body?.status !== undefined
-        ? cleanString(
-            body.status,
-            50
-          )
-        : undefined;
+    const editableFields = [
+      "name",
+      "phone",
+      "email",
+      "project_type",
+      "budget",
+      "message",
+      "status",
+      "notes",
+    ] as const;
 
-    const requestedNotes =
-      body?.notes !== undefined
-        ? cleanString(
-            body.notes,
-            10000
-          )
-        : undefined;
+    const requested: Record<
+      string,
+      string | undefined
+    > = {};
+
+    for (const field of editableFields) {
+      if (body?.[field] !== undefined) {
+        requested[field] =
+          cleanString(
+            body[field],
+            field === "notes"
+              ? 10000
+              : field === "message"
+                ? 5000
+                : field === "email"
+                  ? 200
+                  : field === "phone"
+                    ? 50
+                    : 1000
+          );
+      }
+    }
 
     if (
-      requestedStatus !== undefined &&
-      requestedStatus !== "" &&
+      requested.status !== undefined &&
+      requested.status !== "" &&
       !isValidStatus(
-        requestedStatus
+        requested.status
       )
     ) {
       return jsonError(
@@ -566,8 +588,41 @@ export async function PATCH(
     }
 
     if (
-      requestedStatus === undefined &&
-      requestedNotes === undefined
+      requested.email !== undefined &&
+      requested.email !== "" &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        requested.email
+      )
+    ) {
+      return jsonError(
+        "Format email tidak valid.",
+        422
+      );
+    }
+
+    if (
+      requested.name !== undefined &&
+      !requested.name
+    ) {
+      return jsonError(
+        "Nama wajib diisi.",
+        422
+      );
+    }
+
+    if (
+      requested.phone !== undefined &&
+      !requested.phone
+    ) {
+      return jsonError(
+        "Nomor WhatsApp wajib diisi.",
+        422
+      );
+    }
+
+    if (
+      Object.keys(requested)
+        .length === 0
     ) {
       return jsonError(
         "Tidak ada perubahan.",
@@ -577,10 +632,6 @@ export async function PATCH(
 
     const supabase =
       getServerSupabase();
-
-    /* --------------------------------
-       Ambil data lama
-    -------------------------------- */
 
     const {
       data: existingLead,
@@ -611,28 +662,41 @@ export async function PATCH(
       );
     }
 
-    /* --------------------------------
-       Siapkan perubahan
-    -------------------------------- */
-
     const updateData: Record<
       string,
       unknown
     > = {};
 
-    if (
-      requestedStatus !== undefined &&
-      requestedStatus !== ""
-    ) {
-      updateData.status =
-        requestedStatus;
-    }
+    const oldValues: Record<
+      string,
+      unknown
+    > = {};
 
-    if (
-      requestedNotes !== undefined
-    ) {
-      updateData.notes =
-        requestedNotes;
+    const newValues: Record<
+      string,
+      unknown
+    > = {};
+
+    for (const [field, value] of Object.entries(
+      requested
+    )) {
+      const normalizedValue =
+        value === "" &&
+        ["email", "project_type", "budget", "message", "notes"].includes(field)
+          ? null
+          : value;
+
+      if (
+        (existingLead[field] ?? null) !==
+        normalizedValue
+      ) {
+        updateData[field] =
+          normalizedValue;
+        oldValues[field] =
+          existingLead[field] ?? null;
+        newValues[field] =
+          normalizedValue;
+      }
     }
 
     if (
@@ -644,10 +708,6 @@ export async function PATCH(
         422
       );
     }
-
-    /* --------------------------------
-       Update lead
-    -------------------------------- */
 
     const {
       data: updatedLead,
@@ -672,67 +732,17 @@ export async function PATCH(
       );
     }
 
-    /* --------------------------------
-       Tentukan perubahan untuk audit
-    -------------------------------- */
+    const changedFields =
+      Object.keys(updateData);
 
-    const oldValues: Record<
-      string,
-      unknown
-    > = {};
-
-    const newValues: Record<
-      string,
-      unknown
-    > = {};
-
-    if (
-      requestedStatus !== undefined &&
-      requestedStatus !== ""
-    ) {
-      oldValues.status =
-        existingLead.status ?? null;
-
-      newValues.status =
-        updatedLead.status ?? null;
-    }
-
-    if (
-      requestedNotes !== undefined
-    ) {
-      oldValues.notes =
-        existingLead.notes ?? null;
-
-      newValues.notes =
-        updatedLead.notes ?? null;
-    }
-
-    let action =
-      "lead.updated";
-
-    if (
-      requestedStatus !== undefined &&
-      requestedStatus !== "" &&
-      requestedNotes !== undefined
-    ) {
-      action =
-        "lead.status_and_notes_updated";
-    } else if (
-      requestedStatus !== undefined &&
-      requestedStatus !== ""
-    ) {
-      action =
-        "lead.status_changed";
-    } else if (
-      requestedNotes !== undefined
-    ) {
-      action =
-        "lead.notes_changed";
-    }
-
-    /* --------------------------------
-       Audit Log
-    -------------------------------- */
+    const action =
+      changedFields.includes("status") &&
+      changedFields.length === 1
+        ? "lead.status_changed"
+        : changedFields.includes("notes") &&
+            changedFields.length === 1
+          ? "lead.notes_changed"
+          : "lead.updated";
 
     await writeLeadAuditLog({
       supabase,
@@ -748,6 +758,7 @@ export async function PATCH(
       {
         id: leadId,
         action,
+        changedFields,
       }
     );
 
@@ -814,10 +825,6 @@ export async function DELETE(
     const supabase =
       getServerSupabase();
 
-    /* --------------------------------
-       Ambil data sebelum dihapus
-    -------------------------------- */
-
     const {
       data: existingLead,
       error: findError,
@@ -847,10 +854,6 @@ export async function DELETE(
       );
     }
 
-    /* --------------------------------
-       Delete
-    -------------------------------- */
-
     const {
       data: deletedLead,
       error: deleteError,
@@ -873,10 +876,6 @@ export async function DELETE(
         500
       );
     }
-
-    /* --------------------------------
-       Audit
-    -------------------------------- */
 
     await writeLeadAuditLog({
       supabase,
