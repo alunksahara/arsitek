@@ -1,24 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createAdminSupabase } from "@/lib/supabase-admin";
+import { getPublishedLocation } from "@/lib/public-content";
 
 export const revalidate = 60;
 
-async function getLocation(slug: string) {
-  const supabase = createAdminSupabase();
-  const { data } = await supabase
-    .from("locations")
-    .select("*")
-    .eq("slug", slug)
-    .eq("published", true)
-    .maybeSingle();
-
-  return data;
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ kota: string }> }) {
   const { kota } = await params;
-  const location = await getLocation(kota);
+  const location = await getPublishedLocation(kota);
 
   if (!location) {
     return { title: "Lokasi Tidak Ditemukan | RUMAH ARSITEK" };
@@ -33,7 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ kota: str
 
 export default async function LocationPage({ params }: { params: Promise<{ kota: string }> }) {
   const { kota } = await params;
-  const location = await getLocation(kota);
+  const location = await getPublishedLocation(kota);
 
   if (!location) notFound();
 
@@ -61,7 +49,7 @@ export default async function LocationPage({ params }: { params: Promise<{ kota:
       <section className="border-b border-[#dce5dd] bg-[#eaf3e9]">
         <div className="mx-auto w-[min(1180px,calc(100%-32px))] py-20 sm:py-28">
           <Link href="/lokasi" className="text-xs font-black uppercase tracking-[.15em] text-[#2f6b4a]">← Semua lokasi</Link>
-          <p className="mt-8 text-xs font-black uppercase tracking-[.16em] text-[#6a766f]">{location.province}</p>
+          <p className="mt-8 text-xs font-black uppercase tracking-[.16em] text-[#4b554f]">{location.province}</p>
           <h1 className="mt-3 max-w-4xl font-serif text-5xl font-normal leading-[1.02] tracking-[-.045em] sm:text-7xl">{location.h1}</h1>
           <p className="mt-7 max-w-3xl text-base leading-8 text-[#3f4c44] sm:text-lg">{location.intro}</p>
           {location.local_context && (
