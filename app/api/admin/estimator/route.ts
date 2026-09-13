@@ -4,9 +4,10 @@ import { createAdminSupabase } from "@/lib/supabase-admin";
 import { jsonError } from "@/lib/security";
 
 const DEFAULT_SETTINGS = {
-  essential_rate: 175000,
-  signature_rate: 300000,
-  premium_rate: 450000,
+  basic_rate: 22500,
+  essential_rate: 40000,
+  signature_rate: 62500,
+  premium_rate: 100000,
   rumah_baru_multiplier: 1,
   renovasi_multiplier: 1.15,
   villa_multiplier: 1.2,
@@ -24,6 +25,7 @@ function numberValue(value: unknown, fallback: number) {
 
 function normalize(body: Record<string, unknown>) {
   const settings = {
+    basic_rate: numberValue(body.basic_rate, DEFAULT_SETTINGS.basic_rate),
     essential_rate: numberValue(body.essential_rate, DEFAULT_SETTINGS.essential_rate),
     signature_rate: numberValue(body.signature_rate, DEFAULT_SETTINGS.signature_rate),
     premium_rate: numberValue(body.premium_rate, DEFAULT_SETTINGS.premium_rate),
@@ -37,62 +39,26 @@ function normalize(body: Record<string, unknown>) {
     market_adjustment_percent: numberValue(body.market_adjustment_percent, DEFAULT_SETTINGS.market_adjustment_percent),
   };
 
-  if ([settings.essential_rate, settings.signature_rate, settings.premium_rate].some((value) => value < 0 || value > 10000000)) {
-    return { error: "Rate harus antara 0 dan Rp10.000.000 per m²." };
-  }
-
-  if ([
-    settings.rumah_baru_multiplier,
-    settings.renovasi_multiplier,
-    settings.villa_multiplier,
-    settings.commercial_multiplier,
-  ].some((value) => value <= 0 || value > 10)) {
-    return { error: "Multiplier harus lebih besar dari 0 dan maksimal 10." };
-  }
-
-  if (settings.min_range_multiplier <= 0 || settings.max_range_multiplier <= 0) {
-    return { error: "Range estimasi harus lebih besar dari 0." };
-  }
-
-  if (settings.min_range_multiplier >= settings.max_range_multiplier) {
-    return { error: "Range minimum harus lebih kecil dari range maksimum." };
-  }
-
-  if (settings.min_area < 1 || settings.min_area > 100000) {
-    return { error: "Minimum luas harus antara 1 dan 100.000 m²." };
-  }
-
-  if (settings.market_adjustment_percent < -30 || settings.market_adjustment_percent > 30) {
-    return { error: "Market adjustment harus antara -30% dan +30%." };
-  }
-
+  if ([settings.basic_rate, settings.essential_rate, settings.signature_rate, settings.premium_rate].some((value) => value < 0 || value > 10000000)) return { error: "Tarif desain harus berada antara Rp0 dan Rp10.000.000/m²." };
+  if ([settings.rumah_baru_multiplier, settings.renovasi_multiplier, settings.villa_multiplier, settings.commercial_multiplier].some((value) => value <= 0 || value > 10)) return { error: "Multiplier proyek harus berada di atas 0 dan maksimal 10." };
+  if (settings.min_area < 1 || settings.min_area > 100000) return { error: "Luas minimum harus antara 1 dan 100.000 m²." };
+  if (settings.min_range_multiplier <= 0 || settings.max_range_multiplier <= 0) return { error: "Range estimator harus lebih besar dari 0." };
+  if (settings.max_range_multiplier < settings.min_range_multiplier) return { error: "Range maksimum tidak boleh lebih kecil dari range minimum." };
+  if (settings.market_adjustment_percent < -30 || settings.market_adjustment_percent > 30) return { error: "Market adjustment harus berada antara -30% dan +30%." };
   return { settings };
 }
 
 export async function GET() {
   const { authorized } = await requireAdmin();
-
-  if (!authorized) {
-    return jsonError("Unauthorized", 401);
-  }
-
+  if (!authorized) return jsonError("Unauthorized", 401);
   try {
     const supabase = createAdminSupabase();
-    const { data, error } = await supabase
-      .from("estimator_settings")
-      .select("*")
-      .eq("id", 1)
-      .maybeSingle();
-
+    const { data, error } = await supabase.from("estimator_settings").select("*").eq("id", 1).maybeSingle();
     if (error) {
       console.error("[ADMIN ESTIMATOR GET]", error);
       return jsonError("Gagal mengambil konfigurasi estimator.", 500);
     }
-
-    return NextResponse.json(
-      { settings: { ...DEFAULT_SETTINGS, ...(data || {}) } },
-      { headers: { "Cache-Control": "no-store" } }
-    );
+    return NextResponse.json({ settings: { ...DEFAULT_SETTINGS, ...(data || {}) } }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("[ADMIN ESTIMATOR GET ERROR]", error);
     return jsonError("Terjadi kesalahan server.", 500);
@@ -101,45 +67,19 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   const { authorized, user } = await requireAdmin();
-
-  if (!authorized || !user) {
-    return jsonError("Unauthorized", 401);
-  }
-
+  if (!authorized || !user) return jsonError("Unauthorized", 401);
   try {
     const body = await request.json();
-
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return jsonError("Format request tidak valid.", 400);
-    }
-
+    if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Format request tidak valid.", 400);
     const result = normalize(body as Record<string, unknown>);
-
-    if ("error" in result) {
-      return jsonError(result.error ?? "Konfigurasi estimator tidak valid.", 400);
-    }
+    if ("error" in result) return jsonError(result.error ?? "Konfigurasi estimator tidak valid.", 400);
 
     const supabase = createAdminSupabase();
-    const { data: before } = await supabase
-      .from("estimator_settings")
-      .select("*")
-      .eq("id", 1)
-      .maybeSingle();
-
-    const { data, error } = await supabase
-      .from("estimator_settings")
-      .upsert(
-        {
-          id: 1,
-          ...result.settings,
-          updated_at: new Date().toISOString(),
-          updated_by: user.id,
-        },
-        { onConflict: "id" }
-      )
-      .select("*")
-      .single();
-
+    const { data: before } = await supabase.from("estimator_settings").select("*").eq("id", 1).maybeSingle();
+    const { data, error } = await supabase.from("estimator_settings").upsert(
+      { id: 1, ...result.settings, updated_at: new Date().toISOString(), updated_by: user.id },
+      { onConflict: "id" }
+    ).select("*").single();
     if (error) {
       console.error("[ADMIN ESTIMATOR PATCH]", error);
       return jsonError("Gagal menyimpan konfigurasi estimator.", 400);
@@ -150,15 +90,9 @@ export async function PATCH(request: Request) {
       action: "estimator.update",
       entity_type: "estimator_settings",
       entity_id: null,
-      details: {
-        old: before || null,
-        new: result.settings,
-      },
+      details: { old: before || null, new: result.settings },
     });
-
-    if (auditError) {
-      console.error("[ADMIN ESTIMATOR AUDIT]", auditError);
-    }
+    if (auditError) console.error("[ADMIN ESTIMATOR AUDIT]", auditError);
 
     return NextResponse.json({ success: true, settings: data });
   } catch (error) {

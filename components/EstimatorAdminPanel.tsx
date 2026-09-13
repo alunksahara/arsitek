@@ -5,6 +5,7 @@ import { Calculator, RefreshCw, Save } from "lucide-react";
 import { calculateEstimatorPrice } from "@/lib/estimator-pricing";
 
 type Settings = {
+  basic_rate: number;
   essential_rate: number;
   signature_rate: number;
   premium_rate: number;
@@ -19,9 +20,10 @@ type Settings = {
 };
 
 const DEFAULTS: Settings = {
-  essential_rate: 180000,
-  signature_rate: 300000,
-  premium_rate: 450000,
+  basic_rate: 22500,
+  essential_rate: 40000,
+  signature_rate: 62500,
+  premium_rate: 100000,
   rumah_baru_multiplier: 1,
   renovasi_multiplier: 1.15,
   villa_multiplier: 1.2,
@@ -33,7 +35,6 @@ const DEFAULTS: Settings = {
 };
 
 const SETTINGS_KEYS = Object.keys(DEFAULTS) as (keyof Settings)[];
-
 const money = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 
 function normalizeSettings(input: Partial<Settings> | null | undefined): Settings {
@@ -46,12 +47,10 @@ function normalizeSettings(input: Partial<Settings> | null | undefined): Setting
 }
 
 function validateSettings(settings: Settings): string | null {
-  const rates: (keyof Settings)[] = ["essential_rate", "signature_rate", "premium_rate"];
-  for (const key of rates) {
+  for (const key of ["basic_rate", "essential_rate", "signature_rate", "premium_rate"] as const) {
     if (!Number.isFinite(settings[key]) || settings[key] < 0 || settings[key] > 10000000) return "Tarif desain harus berada antara Rp0 dan Rp10.000.000/m².";
   }
-  const multipliers: (keyof Settings)[] = ["rumah_baru_multiplier", "renovasi_multiplier", "villa_multiplier", "commercial_multiplier"];
-  for (const key of multipliers) {
+  for (const key of ["rumah_baru_multiplier", "renovasi_multiplier", "villa_multiplier", "commercial_multiplier"] as const) {
     if (!Number.isFinite(settings[key]) || settings[key] <= 0 || settings[key] > 10) return "Multiplier proyek harus berada di atas 0 dan maksimal 10.";
   }
   if (!Number.isFinite(settings.min_area) || settings.min_area < 1 || settings.min_area > 100000) return "Luas minimum harus antara 1 dan 100.000 m².";
@@ -61,9 +60,7 @@ function validateSettings(settings: Settings): string | null {
   return null;
 }
 
-function sameSettings(a: Settings, b: Settings) {
-  return SETTINGS_KEYS.every((key) => Number(a[key]) === Number(b[key]));
-}
+function sameSettings(a: Settings, b: Settings) { return SETTINGS_KEYS.every((key) => Number(a[key]) === Number(b[key])); }
 
 export default function EstimatorAdminPanel() {
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
@@ -83,7 +80,6 @@ export default function EstimatorAdminPanel() {
       setError(true); setMessage(loadError instanceof Error ? loadError.message : "Gagal mengambil konfigurasi estimator.");
     } finally { setLoading(false); }
   }
-
   useEffect(() => { load(); }, []);
 
   function update(key: keyof Settings, value: string) {
@@ -106,12 +102,7 @@ export default function EstimatorAdminPanel() {
       const verifyResponse = await fetch(`/api/estimator?verify=${Date.now()}`, { method: "GET", cache: "no-store" });
       const verifyData = await verifyResponse.json();
       if (!verifyResponse.ok) throw new Error("Konfigurasi tersimpan, tetapi verifikasi estimator publik gagal.");
-      const publicSettings = normalizeSettings({
-        ...verifyData.settings,
-        essential_rate: verifyData.settings.base_essential_rate ?? verifyData.settings.essential_rate,
-        signature_rate: verifyData.settings.base_signature_rate ?? verifyData.settings.signature_rate,
-        premium_rate: verifyData.settings.base_premium_rate ?? verifyData.settings.premium_rate,
-      });
+      const publicSettings = normalizeSettings({ ...verifyData.settings, basic_rate: verifyData.settings.base_basic_rate ?? verifyData.settings.basic_rate, essential_rate: verifyData.settings.base_essential_rate ?? verifyData.settings.essential_rate, signature_rate: verifyData.settings.base_signature_rate ?? verifyData.settings.signature_rate, premium_rate: verifyData.settings.base_premium_rate ?? verifyData.settings.premium_rate });
       if (!sameSettings(saved, publicSettings)) throw new Error("Peringatan: konfigurasi admin tersimpan, tetapi estimator publik masih membaca data berbeda.");
       setMessage("Konfigurasi tersimpan dan sudah terverifikasi di estimator publik.");
     } catch (saveError) {
@@ -120,45 +111,22 @@ export default function EstimatorAdminPanel() {
   }
 
   const preview = useMemo(() => calculateEstimatorPrice({
-    area: 120,
-    projectType: "Rumah Baru",
-    designLevel: "Signature",
-    floors: 1,
-    condition: "Lahan kosong",
-    needs: ["Desain arsitektur"],
-    minArea: settings.min_area,
-    baseRates: { Essential: settings.essential_rate, Signature: settings.signature_rate, Premium: settings.premium_rate },
+    area: 120, projectType: "Rumah Baru", designLevel: "Signature", floors: 1, condition: "Lahan kosong", needs: ["Desain arsitektur"], minArea: settings.min_area,
+    baseRates: { Basic: settings.basic_rate, Essential: settings.essential_rate, Signature: settings.signature_rate, Premium: settings.premium_rate, Custom: 0 },
     projectMultipliers: { "Rumah Baru": settings.rumah_baru_multiplier, Renovasi: settings.renovasi_multiplier, Villa: settings.villa_multiplier, Commercial: settings.commercial_multiplier },
-    minRangeMultiplier: settings.min_range_multiplier,
-    maxRangeMultiplier: settings.max_range_multiplier,
-    marketAdjustmentPercent: settings.market_adjustment_percent,
+    minRangeMultiplier: settings.min_range_multiplier, maxRangeMultiplier: settings.max_range_multiplier, marketAdjustmentPercent: settings.market_adjustment_percent,
   }), [settings]);
 
-  const rateFields: [keyof Settings, string][] = [["essential_rate", "Essential / m²"], ["signature_rate", "Signature / m²"], ["premium_rate", "Premium / m²"]];
+  const rateFields: [keyof Settings, string][] = [["basic_rate", "Basic / m²"], ["essential_rate", "Essential / m²"], ["signature_rate", "Signature / m²"], ["premium_rate", "Premium / m²"]];
   const multiplierFields: [keyof Settings, string][] = [["rumah_baru_multiplier", "Rumah Baru"], ["renovasi_multiplier", "Renovasi"], ["villa_multiplier", "Villa"], ["commercial_multiplier", "Commercial"]];
 
-  return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8">
-      <div className="rounded-3xl border border-[#d5d0c7] bg-white p-5 shadow-sm sm:p-7">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div><div className="inline-flex items-center gap-2 rounded-full bg-[#eef3ed] px-3 py-1.5 text-xs font-semibold text-[#2f6b4a]"><Calculator size={14} /> Estimator terpusat</div><h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#181817] sm:text-3xl">Konfigurasi estimator RUMAH ARSITEK</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#454545]">Nilai di halaman ini disimpan ke Supabase. Tarif dan multiplier dasar menjadi input pricing engine; faktor scope, kondisi, lantai, kompleksitas, dan penyesuaian pasar dihitung terpusat oleh sistem.</p></div>
-          <button type="button" onClick={load} disabled={loading || saving} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c4bb] bg-white px-4 py-2.5 text-sm font-semibold text-[#252525] hover:bg-[#faf9f6] disabled:opacity-50"><RefreshCw size={15} /> Muat ulang</button>
-        </div>
-
-        {message && <div role={error ? "alert" : "status"} className={`mt-5 rounded-xl border px-4 py-3 text-sm font-medium ${error ? "border-red-200 bg-red-50 text-red-700" : "border-[#d5d0c7] bg-[#faf9f6] text-[#333333]"}`}>{message}</div>}
-
-        <fieldset disabled={loading || saving} className="mt-7 space-y-7">
-          <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Tarif desain</h2><div className="mt-3 grid gap-3 sm:grid-cols-3">{rateFields.map(([key, label]) => <label key={key} className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">{label}</span><input type="number" min="0" value={settings[key]} onChange={(event) => update(key, event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>)}</div></section>
-          <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Penyesuaian pasar</h2><div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Market adjustment (%)</span><input type="number" min="-30" max="30" step="1" value={settings.market_adjustment_percent} onChange={(event) => update("market_adjustment_percent", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /><span className="mt-2 block text-xs leading-5 text-[#666]">0% mempertahankan tarif dasar. Nilai negatif membuat estimator lebih kompetitif; nilai positif menaikkan posisi harga.</span></label><div className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4 text-sm leading-6 text-[#454545]"><strong>Rentang aman:</strong> -30% sampai +30%. Ini hanya kalibrasi estimasi customer-facing, bukan perubahan biaya partner atau margin internal.</div></div></section>
-          <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Multiplier jenis proyek</h2><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{multiplierFields.map(([key, label]) => <label key={key} className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">{label}</span><input type="number" min="0.01" max="10" step="0.01" value={settings[key]} onChange={(event) => update(key, event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>)}</div></section>
-          <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Batas estimasi</h2><div className="mt-3 grid gap-3 sm:grid-cols-3"><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Minimum luas (m²)</span><input type="number" min="1" value={settings.min_area} onChange={(event) => update("min_area", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Range minimum</span><input type="number" min="0.01" step="0.01" value={settings.min_range_multiplier} onChange={(event) => update("min_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Range maksimum</span><input type="number" min="0.01" step="0.01" value={settings.max_range_multiplier} onChange={(event) => update("max_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label></div></section>
-        </fieldset>
-
-        <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div className="rounded-2xl bg-[#181817] p-5 text-white"><div className="text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Preview 120 m² · Rumah Baru · Signature</div><div className="mt-3 text-xl font-bold sm:text-2xl">{money(preview.min)} — {money(preview.max)}</div><p className="mt-2 text-xs leading-5 text-white/90">Preview menggunakan pricing engine yang sama dengan estimator publik. Market adjustment saat ini: {settings.market_adjustment_percent > 0 ? "+" : ""}{settings.market_adjustment_percent}%.</p></div>
-          <button type="button" onClick={save} disabled={loading || saving} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#255c45] px-6 py-3 text-sm font-bold text-white hover:bg-[#1d4c39] disabled:opacity-50"><Save size={16} /> {saving ? "Menyimpan..." : "Simpan ke Supabase"}</button>
-        </div>
-      </div>
-    </div>
-  );
+  return <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-6 lg:px-8"><div className="rounded-3xl border border-[#d5d0c7] bg-white p-5 shadow-sm sm:p-7">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><div className="inline-flex items-center gap-2 rounded-full bg-[#eef3ed] px-3 py-1.5 text-xs font-semibold text-[#2f6b4a]"><Calculator size={14} /> Estimator terpusat</div><h1 className="mt-3 text-2xl font-semibold tracking-tight text-[#181817] sm:text-3xl">Konfigurasi estimator RUMAH ARSITEK</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#454545]">Tarif paket dihitung oleh pricing engine yang sama dengan estimator publik. Custom tidak memakai rate otomatis dan diarahkan ke proposal.</p></div><button type="button" onClick={load} disabled={loading || saving} className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#c9c4bb] bg-white px-4 py-2.5 text-sm font-semibold text-[#252525] hover:bg-[#faf9f6] disabled:opacity-50"><RefreshCw size={15} /> Muat ulang</button></div>
+    {message && <div role={error ? "alert" : "status"} className={`mt-5 rounded-xl border px-4 py-3 text-sm font-medium ${error ? "border-red-200 bg-red-50 text-red-700" : "border-[#d5d0c7] bg-[#faf9f6] text-[#333333]"}`}>{message}</div>}
+    <fieldset disabled={loading || saving} className="mt-7 space-y-7"><section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Tarif paket terhitung</h2><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{rateFields.map(([key, label]) => <label key={key} className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">{label}</span><input type="number" min="0" value={settings[key]} onChange={(event) => update(key, event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>)}</div><p className="mt-2 text-xs leading-5 text-[#666]">Posisi awal: Basic 15–30k/m², Essential 30–50k/m², Signature 50–75k/m², Premium 75–125k/m²+. Nilai ini dapat dikalibrasi melalui tarif dan market adjustment.</p></section>
+    <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Penyesuaian pasar</h2><div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Market adjustment (%)</span><input type="number" min="-30" max="30" step="1" value={settings.market_adjustment_percent} onChange={(event) => update("market_adjustment_percent", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /><span className="mt-2 block text-xs leading-5 text-[#666]">Diterapkan server-side setelah tarif dasar. 0% mempertahankan tarif dasar.</span></label><div className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4 text-sm leading-6 text-[#454545]"><strong>Custom:</strong> tidak dihitung otomatis. Proyek besar, kompleks, komersial, villa, interior kompleks, atau kebutuhan khusus diarahkan ke konsultasi/proposal.</div></div></section>
+    <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Multiplier jenis proyek</h2><div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{multiplierFields.map(([key, label]) => <label key={key} className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">{label}</span><input type="number" min="0.01" max="10" step="0.01" value={settings[key]} onChange={(event) => update(key, event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label>)}</div></section>
+    <section><h2 className="text-sm font-bold uppercase tracking-[0.14em] text-[#3f4a43]">Batas estimasi</h2><div className="mt-3 grid gap-3 sm:grid-cols-3"><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Minimum luas (m²)</span><input type="number" min="1" value={settings.min_area} onChange={(event) => update("min_area", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Range minimum</span><input type="number" min="0.01" step="0.01" value={settings.min_range_multiplier} onChange={(event) => update("min_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label><label className="rounded-2xl border border-[#ded9d0] bg-[#faf9f6] p-4"><span className="text-xs font-semibold text-[#454545]">Range maksimum</span><input type="number" min="0.01" step="0.01" value={settings.max_range_multiplier} onChange={(event) => update("max_range_multiplier", event.target.value)} className="mt-2 w-full rounded-xl border border-[#cfc9bf] bg-white px-3 py-2.5 text-sm font-semibold text-black outline-none focus:border-[#2f6b4a]" /></label></div></section></fieldset>
+    <div className="mt-7 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center"><div className="rounded-2xl bg-[#181817] p-5 text-white"><div className="text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Preview 120 m² · Rumah Baru · Signature</div><div className="mt-3 text-xl font-bold sm:text-2xl">{money(preview.min)} — {money(preview.max)}</div><p className="mt-2 text-xs leading-5 text-white/90">Preview memakai pricing engine yang sama. Market adjustment: {settings.market_adjustment_percent > 0 ? "+" : ""}{settings.market_adjustment_percent}%.</p></div><button type="button" onClick={save} disabled={loading || saving} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#255c45] px-6 py-3 text-sm font-bold text-white hover:bg-[#1d4c39] disabled:opacity-50"><Save size={16} /> {saving ? "Menyimpan..." : "Simpan ke Supabase"}</button></div>
+  </div></div>;
 }

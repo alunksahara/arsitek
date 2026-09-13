@@ -8,6 +8,7 @@ function cleanString(value: unknown, maxLength = 1000): string {
 }
 
 function cleanNumber(value: unknown, min = 0, max = 1000000000000): number | null {
+  if (value === null || value === undefined || value === "") return null;
   const number = typeof value === "number" ? value : Number(value);
   if (!Number.isFinite(number) || number < min || number > max) return null;
   return number;
