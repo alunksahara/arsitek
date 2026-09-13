@@ -4,7 +4,7 @@ import { createAdminSupabase } from "@/lib/supabase-admin";
 import { jsonError } from "@/lib/security";
 
 const DEFAULT_SETTINGS = {
-  essential_rate: 180000,
+  essential_rate: 175000,
   signature_rate: 300000,
   premium_rate: 450000,
   rumah_baru_multiplier: 1,
@@ -15,7 +15,6 @@ const DEFAULT_SETTINGS = {
   max_range_multiplier: 1.25,
   min_area: 20,
   market_adjustment_percent: 0,
-  minimum_project_fee: 0,
 };
 
 function numberValue(value: unknown, fallback: number) {
@@ -36,7 +35,6 @@ function normalize(body: Record<string, unknown>) {
     max_range_multiplier: numberValue(body.max_range_multiplier, DEFAULT_SETTINGS.max_range_multiplier),
     min_area: numberValue(body.min_area, DEFAULT_SETTINGS.min_area),
     market_adjustment_percent: numberValue(body.market_adjustment_percent, DEFAULT_SETTINGS.market_adjustment_percent),
-    minimum_project_fee: numberValue(body.minimum_project_fee, DEFAULT_SETTINGS.minimum_project_fee),
   };
 
   if ([settings.essential_rate, settings.signature_rate, settings.premium_rate].some((value) => value < 0 || value > 10000000)) {
@@ -66,10 +64,6 @@ function normalize(body: Record<string, unknown>) {
 
   if (settings.market_adjustment_percent < -30 || settings.market_adjustment_percent > 30) {
     return { error: "Market adjustment harus antara -30% dan +30%." };
-  }
-
-  if (settings.minimum_project_fee < 0 || settings.minimum_project_fee > 10000000000) {
-    return { error: "Minimum project fee harus antara Rp0 dan Rp10 miliar." };
   }
 
   return { settings };
