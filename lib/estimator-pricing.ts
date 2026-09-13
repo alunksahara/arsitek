@@ -15,7 +15,6 @@ export type PricingInput = {
   minRangeMultiplier: number;
   maxRangeMultiplier: number;
   marketAdjustmentPercent?: number;
-  minimumProjectFee?: number;
 };
 
 export type PricingResult = {
@@ -130,17 +129,15 @@ export function calculateEstimatorPrice(input: PricingInput): PricingResult {
     0.7,
     1.3
   );
-  const minimumProjectFee = Math.max(0, safeNumber(input.minimumProjectFee, 0));
 
   const base = area * baseRate * projectFactor;
-  const calculated =
+  const adjusted =
     base *
     conditionFactor *
     floorFactor *
     complexityFactor *
     scopeFactor *
     marketAdjustmentFactor;
-  const adjusted = Math.max(calculated, minimumProjectFee);
 
   return {
     area,
