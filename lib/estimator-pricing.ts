@@ -14,6 +14,8 @@ export type PricingInput = {
   projectMultipliers: Record<PricingProjectType, number>;
   minRangeMultiplier: number;
   maxRangeMultiplier: number;
+  marketAdjustmentPercent?: number;
+  minimumProjectFee?: number;
 };
 
 export type PricingResult = {
@@ -24,6 +26,7 @@ export type PricingResult = {
   floorFactor: number;
   complexityFactor: number;
   scopeFactor: number;
+  marketAdjustmentFactor: number;
   adjusted: number;
   min: number;
   max: number;
@@ -49,7 +52,7 @@ const NEED_FACTORS: Record<string, number> = {
   "Paket desain lengkap": 0.12,
 };
 
-export const PRICING_MODEL_VERSION = "1.0";
+export const PRICING_MODEL_VERSION = "1.1";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -122,9 +125,22 @@ export function calculateEstimatorPrice(input: PricingInput): PricingResult {
     landArea: input.landArea,
   });
   const scopeFactor = getScopeFactor(input.needs);
+  const marketAdjustmentFactor = clamp(
+    1 + safeNumber(input.marketAdjustmentPercent, 0) / 100,
+    0.7,
+    1.3
+  );
+  const minimumProjectFee = Math.max(0, safeNumber(input.minimumProjectFee, 0));
 
   const base = area * baseRate * projectFactor;
-  const adjusted = base * conditionFactor * floorFactor * complexityFactor * scopeFactor;
+  const calculated =
+    base *
+    conditionFactor *
+    floorFactor *
+    complexityFactor *
+    scopeFactor *
+    marketAdjustmentFactor;
+  const adjusted = Math.max(calculated, minimumProjectFee);
 
   return {
     area,
@@ -134,6 +150,7 @@ export function calculateEstimatorPrice(input: PricingInput): PricingResult {
     floorFactor,
     complexityFactor,
     scopeFactor,
+    marketAdjustmentFactor,
     adjusted,
     min: adjusted * input.minRangeMultiplier,
     max: adjusted * input.maxRangeMultiplier,
