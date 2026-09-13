@@ -1,5 +1,6 @@
 export type PricingProjectType = "Rumah Baru" | "Renovasi" | "Villa" | "Commercial";
-export type PricingDesignLevel = "Essential" | "Signature" | "Premium";
+export type PricingDesignLevel = "Basic" | "Essential" | "Signature" | "Premium" | "Custom";
+export type CalculatedDesignLevel = Exclude<PricingDesignLevel, "Custom">;
 
 export type PricingInput = {
   area: number;
@@ -29,6 +30,7 @@ export type PricingResult = {
   adjusted: number;
   min: number;
   max: number;
+  isCustom: boolean;
 };
 
 const CONDITION_FACTORS: Record<string, number> = {
@@ -51,7 +53,7 @@ const NEED_FACTORS: Record<string, number> = {
   "Paket desain lengkap": 0.12,
 };
 
-export const PRICING_MODEL_VERSION = "1.1";
+export const PRICING_MODEL_VERSION = "1.2";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -105,15 +107,16 @@ export function getComplexityFactor(input: Pick<PricingInput, "area" | "floors" 
 
   if (floors >= 3) factor += 0.06;
   if (needsCount >= 5) factor += 0.05;
-
   if (landArea && landArea > 0 && area > landArea) factor += 0.03;
 
   return clamp(factor, 1, 1.25);
 }
 
 export function calculateEstimatorPrice(input: PricingInput): PricingResult {
-  const area = Math.max(input.minArea, Math.min(10000, Math.round(safeNumber(input.area, input.minArea))));
-  const baseRate = safeNumber(input.baseRates[input.designLevel], 0);
+  const area = Math.max(
+    input.minArea,
+    Math.min(10000, Math.round(safeNumber(input.area, input.minArea)))
+  );
   const projectFactor = safeNumber(input.projectMultipliers[input.projectType], 1);
   const conditionFactor = getConditionFactor(input.condition);
   const floorFactor = getFloorFactor(input.floors);
@@ -130,6 +133,24 @@ export function calculateEstimatorPrice(input: PricingInput): PricingResult {
     1.3
   );
 
+  if (input.designLevel === "Custom") {
+    return {
+      area,
+      base: 0,
+      projectFactor,
+      conditionFactor,
+      floorFactor,
+      complexityFactor,
+      scopeFactor,
+      marketAdjustmentFactor,
+      adjusted: 0,
+      min: 0,
+      max: 0,
+      isCustom: true,
+    };
+  }
+
+  const baseRate = safeNumber(input.baseRates[input.designLevel], 0);
   const base = area * baseRate * projectFactor;
   const adjusted =
     base *
@@ -151,5 +172,6 @@ export function calculateEstimatorPrice(input: PricingInput): PricingResult {
     adjusted,
     min: adjusted * input.minRangeMultiplier,
     max: adjusted * input.maxRangeMultiplier,
+    isCustom: false,
   };
 }
