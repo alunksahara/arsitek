@@ -4,9 +4,10 @@ import { createAdminSupabase } from "@/lib/supabase-admin";
 import { jsonError } from "@/lib/security";
 
 const DEFAULT_SETTINGS = {
-  essential_rate: 180000,
-  signature_rate: 300000,
-  premium_rate: 450000,
+  basic_rate: 22500,
+  essential_rate: 40000,
+  signature_rate: 62500,
+  premium_rate: 100000,
   rumah_baru_multiplier: 1,
   renovasi_multiplier: 1.15,
   villa_multiplier: 1.2,
@@ -24,6 +25,7 @@ function numberValue(value: unknown, fallback: number): number {
 
 function normalizeSettings(body: Record<string, unknown>) {
   const settings = {
+    basic_rate: numberValue(body.basic_rate, DEFAULT_SETTINGS.basic_rate),
     essential_rate: numberValue(body.essential_rate, DEFAULT_SETTINGS.essential_rate),
     signature_rate: numberValue(body.signature_rate, DEFAULT_SETTINGS.signature_rate),
     premium_rate: numberValue(body.premium_rate, DEFAULT_SETTINGS.premium_rate),
@@ -37,37 +39,15 @@ function normalizeSettings(body: Record<string, unknown>) {
     market_adjustment_percent: numberValue(body.market_adjustment_percent, DEFAULT_SETTINGS.market_adjustment_percent),
   };
 
-  const rates = [settings.essential_rate, settings.signature_rate, settings.premium_rate];
-  const multipliers = [
-    settings.rumah_baru_multiplier,
-    settings.renovasi_multiplier,
-    settings.villa_multiplier,
-    settings.commercial_multiplier,
-  ];
+  const rates = [settings.basic_rate, settings.essential_rate, settings.signature_rate, settings.premium_rate];
+  const multipliers = [settings.rumah_baru_multiplier, settings.renovasi_multiplier, settings.villa_multiplier, settings.commercial_multiplier];
 
-  if (rates.some((value) => value < 0 || value > 10000000)) {
-    return { error: "Rate harus antara 0 dan Rp10.000.000 per m²." };
-  }
-
-  if (multipliers.some((value) => value <= 0 || value > 10)) {
-    return { error: "Multiplier harus lebih besar dari 0 dan maksimal 10." };
-  }
-
-  if (settings.min_range_multiplier <= 0 || settings.max_range_multiplier <= 0) {
-    return { error: "Range estimasi harus lebih besar dari 0." };
-  }
-
-  if (settings.max_range_multiplier < settings.min_range_multiplier) {
-    return { error: "Range maksimum tidak boleh lebih kecil dari range minimum." };
-  }
-
-  if (settings.min_area < 1 || settings.min_area > 100000) {
-    return { error: "Minimum luas harus antara 1 dan 100.000 m²." };
-  }
-
-  if (settings.market_adjustment_percent < -30 || settings.market_adjustment_percent > 30) {
-    return { error: "Market adjustment harus antara -30% dan +30%." };
-  }
+  if (rates.some((value) => value < 0 || value > 10000000)) return { error: "Rate harus antara 0 dan Rp10.000.000 per m²." };
+  if (multipliers.some((value) => value <= 0 || value > 10)) return { error: "Multiplier harus lebih besar dari 0 dan maksimal 10." };
+  if (settings.min_range_multiplier <= 0 || settings.max_range_multiplier <= 0) return { error: "Range estimasi harus lebih besar dari 0." };
+  if (settings.max_range_multiplier < settings.min_range_multiplier) return { error: "Range maksimum tidak boleh lebih kecil dari range minimum." };
+  if (settings.min_area < 1 || settings.min_area > 100000) return { error: "Minimum luas harus antara 1 dan 100.000 m²." };
+  if (settings.market_adjustment_percent < -30 || settings.market_adjustment_percent > 30) return { error: "Market adjustment harus antara -30% dan +30%." };
 
   return { settings };
 }
@@ -75,14 +55,14 @@ function normalizeSettings(body: Record<string, unknown>) {
 function toPublicSettings(raw: Record<string, unknown> | null) {
   const settings = normalizeSettings({ ...(raw || {}) });
   if ("error" in settings) return DEFAULT_SETTINGS;
-
   const factor = 1 + settings.settings.market_adjustment_percent / 100;
-
   return {
     id: raw?.id ?? 1,
+    basic_rate: settings.settings.basic_rate * factor,
     essential_rate: settings.settings.essential_rate * factor,
     signature_rate: settings.settings.signature_rate * factor,
     premium_rate: settings.settings.premium_rate * factor,
+    base_basic_rate: settings.settings.basic_rate,
     base_essential_rate: settings.settings.essential_rate,
     base_signature_rate: settings.settings.signature_rate,
     base_premium_rate: settings.settings.premium_rate,
@@ -101,21 +81,12 @@ function toPublicSettings(raw: Record<string, unknown> | null) {
 export async function GET() {
   try {
     const supabase = createAdminSupabase();
-    const { data, error } = await supabase
-      .from("estimator_settings")
-      .select("*")
-      .eq("id", 1)
-      .maybeSingle();
-
+    const { data, error } = await supabase.from("estimator_settings").select("*").eq("id", 1).maybeSingle();
     if (error) {
       console.error("[ESTIMATOR GET]", error);
       return jsonError("Gagal mengambil konfigurasi estimator.", 500);
     }
-
-    return NextResponse.json(
-      { settings: toPublicSettings(data) },
-      { headers: { "Cache-Control": "no-store" } }
-    );
+    return NextResponse.json({ settings: toPublicSettings(data) }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("[ESTIMATOR GET ERROR]", error);
     return jsonError("Terjadi kesalahan saat mengambil konfigurasi estimator.", 500);
@@ -124,36 +95,19 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   const { authorized, user } = await requireAdmin();
-
-  if (!authorized || !user) {
-    return jsonError("Unauthorized", 401);
-  }
+  if (!authorized || !user) return jsonError("Unauthorized", 401);
 
   try {
     const body = await request.json();
-    if (!body || typeof body !== "object" || Array.isArray(body)) {
-      return jsonError("Format request tidak valid.", 400);
-    }
-
+    if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Format request tidak valid.", 400);
     const result = normalizeSettings(body as Record<string, unknown>);
-    if ("error" in result) {
-      return jsonError(result.error || "Konfigurasi estimator tidak valid.", 400);
-    }
+    if ("error" in result) return jsonError(result.error || "Konfigurasi estimator tidak valid.", 400);
 
     const supabase = createAdminSupabase();
-    const { data, error } = await supabase
-      .from("estimator_settings")
-      .upsert(
-        {
-          id: 1,
-          ...result.settings,
-          updated_at: new Date().toISOString(),
-          updated_by: user.id,
-        },
-        { onConflict: "id" }
-      )
-      .select()
-      .single();
+    const { data, error } = await supabase.from("estimator_settings").upsert(
+      { id: 1, ...result.settings, updated_at: new Date().toISOString(), updated_by: user.id },
+      { onConflict: "id" }
+    ).select().single();
 
     if (error) {
       console.error("[ESTIMATOR UPDATE]", error);
