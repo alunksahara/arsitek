@@ -1,5 +1,5 @@
 export type PricingProjectType = "Rumah Baru" | "Renovasi" | "Villa" | "Commercial";
-export type PricingDesignLevel = "Essential" | "Signature" | "Premium";
+export type PricingDesignLevel = "Basic" | "Essential" | "Signature" | "Premium";
 
 export type PricingInput = {
   area: number;
@@ -51,7 +51,7 @@ const NEED_FACTORS: Record<string, number> = {
   "Paket desain lengkap": 0.12,
 };
 
-export const PRICING_MODEL_VERSION = "1.1";
+export const PRICING_MODEL_VERSION = "1.2";
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
